@@ -11,12 +11,15 @@ def main():
         'text': netgen.output.Text,
         'bind': netgen.output.Bind,
     }
-    ap = argparse.ArgumentParser(description='generate')
-    ap.add_argument('--zone', metavar='ZONE', type=str, required=True)
+    ap = argparse.ArgumentParser(description='generate ip address plan')
+    ap.add_argument('--zone', metavar='ZONE', type=str, required=True,
+                    help='name of the zone to generate')
     ap.add_argument('--config', metavar='config.yaml',
-                    type=str, default='config.yaml')
+                    type=str, default='config.yaml',
+                    help='config file to use (default: config.yaml)')
     ap.add_argument('--output', metavar='|'.join(outplugins.keys()),
-                    type=str, choices=outplugins.keys(), default='text')
+                    type=str, choices=outplugins.keys(), default='text',
+                    help='output plugin to use')
     args = ap.parse_args()
 
     with open(args.config) as config_fd:
