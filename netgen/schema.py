@@ -1,15 +1,14 @@
 from voluptuous import Schema,Match,Required
+from ipaddress import IPv4Network
 
 class Validator(object):
     schema = Schema({
-        Required('zone'): Match('^[A-Za-z0-9_-]+$'),
-        Required('network'): Match('^[\d.]+/\d{2}$'),
+        Required('zone'): Match('^[A-Za-z0-9-]+$'),
+        Required('network'): lambda x: IPv4Network(unicode(x)),
         Required('subnets'): [{
-            Required('subnet'): Match('^\w+$'),
+            Required('subnet'): Match('^[A-Za-z0-9-]+$'),
             Required('size'): int,
-            Required('hosts'): [
-                str
-            ]
+            Required('hosts'): [ str ]
         }]
     });
 

@@ -2,8 +2,9 @@
 import sys
 import argparse
 import yaml
-import netgen
 import voluptuous
+import ipaddress
+import netgen
 
 def main():
     outplugins = {
@@ -23,7 +24,7 @@ def main():
         schema = voluptuous.Schema({
             str: {
                 'type': str,
-                'network': voluptuous.Match('^[0-9.]+/[0-9]{1,2}$')
+                'network': lambda x: ipaddress.IPv4Network(unicode(x)),
             }
         })
         schema(config)
