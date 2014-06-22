@@ -8,7 +8,7 @@ class Validator(object):
         Required('subnets'): [{
             Required('subnet'): Match('^[A-Za-z0-9-]+$'),
             Required('size'): int,
-            Required('hosts'): [ str ]
+            Required('hosts'): [ Match('^[A-Za-z0-9-]+$') ]
         }]
     });
 
