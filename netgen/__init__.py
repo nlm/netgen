@@ -22,8 +22,9 @@ class NetworkGenerator(object):
         zi = self.add_zone(data['zone'], data['network'])
         for subnet in data['subnets']:
             si = zi.add_subnet(subnet['subnet'], subnet['size'])
-            for host in subnet['hosts']:
-                si.add_host(host)
+            if 'hosts' in subnet:
+                for host in subnet['hosts']:
+                    si.add_host(host)
 
     def output(self, output_class, params=None):
         if not issubclass(output_class, Output):
@@ -85,10 +86,11 @@ class Host(object):
         return u'Host({}: {})'.format(self.name, self.address)
 
 class Topology(object):
-    def __init__(self, template, name, network):
+    def __init__(self, zone, vrf, network, template):
         self.env = Environment(loader=PackageLoader('netgen', 'templates'))
         self.template = self.env.get_template(template + '.yaml')
-        self.name = name
+        self.zone = zone
+        self.vrf = vrf
         self.network = IPv4Network(unicode(network))
         self._rendered = None
         self._data = None
@@ -102,6 +104,7 @@ class Topology(object):
     def __str__(self):
         if self._rendered is None:
             self._rendered = self.template.render(
-                                zone_name=self.name,
-                                zone_net=self.network)
+                                zone=self.zone,
+                                vrf=self.vrf,
+                                network=self.network)
         return self._rendered

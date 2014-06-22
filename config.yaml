@@ -1,6 +1,11 @@
-loc1-pf1:
-  type: az
-  network: 192.168.0.0/24
-loc1-pf2:
-  type: az
-  network: 192.168.1.0/24
+vtydc3-rz1:
+  - vrf: adm
+    template: rz-adm
+    network: 172.16.240.0/20
+  - vrf: pub
+    template: rz-pub
+    network: 192.168.0.0/24
+vtydc2-p10:
+  - vrf: adm
+    template: az
+    network: 192.168.1.0/24

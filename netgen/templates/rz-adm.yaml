@@ -1,0 +1,38 @@
+zone: {{ zone }}
+network: {{ network }}
+subnets:
+  - subnet: mgt
+    size: 23
+    hosts:
+      - mgt-gw
+      {%- for i in range(1,3) %}
+      - mgt-gw{{ "%02d"|format(i) }}
+      {%- endfor %}
+      {%- for i in range(1,3) %}
+      - is-bootstrap{{ '%02d'|format(i) }}
+      {%- endfor %}
+      {%- for i in range(1,6) %}
+      - pub-svc{{ '%02d'|format(i) }}
+      {%- endfor %}
+      {%- for i in range(1,21) %}
+      - is-svc{{ '%02d'|format(i) }}
+      {%- endfor %}
+      {%- for i in range(1,21) %}
+      - is-svc{{ '%02d'|format(i) }}
+      {%- endfor %}
+      {%- for i in range(1,11) %}
+      - is-db{{ '%02d'|format(i) }}
+      {%- endfor %}
+      {%- for i in range(1,11) %}
+      - cdb01-f12n{{ '%02d'|format(i) }}
+      {%- endfor %}
+  - subnet: console
+    size: 23
+    hosts:
+      - mgt-console-gw
+      {%- for i in range(1,3) %}
+      - mgt-console-gw{{ "%02d"|format(i) }}
+      {%- endfor %}
+      {%- for i in range(1,3) %}
+      - mgt-gw{{ "%02d"|format(i) }}
+      {%- endfor %}

@@ -1,0 +1,24 @@
+zone: {{ zone }}
+network: {{ network }}
+subnets:
+  - subnet: pub-adm
+    size: 29
+  - subnet: pub-lb
+    size: 29
+  - subnet: pub-svc
+    size: 28
+    hosts:
+      - svc-gw
+      {% for i in range(1, 3) %}
+      - svc-gw{{ '%02d'|format(i) }}
+      {% endfor %}
+      - pub-ns
+      - pub-lb
+      {% for i in range(1, 3) %}
+      - pub-smtp{{ '%02d'|format(i) }}
+      {% endfor %}
+      - pub-apiadmin
+      - pub-apibilling
+      - pub-apiticket
+      - pub-apiimage
+      - pub-sentry

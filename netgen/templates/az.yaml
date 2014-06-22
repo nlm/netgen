@@ -1,5 +1,5 @@
-zone: {{ zone_name }}
-network: {{ zone_net }}
+zone: {{ zone }}
+network: {{ network }}
 subnets:
   - subnet: cons
     size: 26

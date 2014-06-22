@@ -1,4 +1,4 @@
-from voluptuous import Schema,Match,Required
+from voluptuous import Schema,Match,Required,Optional
 from ipaddress import IPv4Network
 
 class Validator(object):
@@ -8,7 +8,7 @@ class Validator(object):
         Required('subnets'): [{
             Required('subnet'): Match('^[A-Za-z0-9-]+$'),
             Required('size'): int,
-            Required('hosts'): [ Match('^[A-Za-z0-9-]+$') ]
+            Optional('hosts'): [ Match('^[A-Za-z0-9-]+$') ]
         }]
     });
 

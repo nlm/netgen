@@ -22,21 +22,19 @@ class Output(object):
 class Text(Output):
     def output_zone(self, zone, params):
         print u'#' * 50
-        print u'# Zone {}'.format(zone.name)
+        print u'Zone {}'.format(zone.name)
         print u'#' * 50
 
     def output_subnet(self, subnet, params):
-        print
-        print u'# Subnet {}{} is {}'.format(
+        print u'Subnet {}{} is {}'.format(
             subnet.zone.name,
             subnet.name,
             subnet.network,
         )
 
     def output_host(self, host, params):
-        print u'{}{}-{} has address {}'.format(
+        print u'  {}{} has address {}'.format(
             host.subnet.zone.name,
-            host.subnet.name,
             host.name,
             host.address,
         )

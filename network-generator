@@ -25,17 +25,19 @@ def main():
     with open(args.config) as config_fd:
         config = yaml.load(config_fd)
         schema = voluptuous.Schema({
-            str: {
-                'type': str,
+            str: [{
+                'vrf': str,
+                'template': str,
                 'network': lambda x: ipaddress.IPv4Network(unicode(x)),
-            }
+            }]
         })
         schema(config)
         if args.zone not in config:
             sys.exit('zone "{}" does not exists'.format(args.zone))
         zone = config[args.zone]
-        topology = netgen.Topology(zone['type'], args.zone, zone['network'])
-        netgen.NetworkGenerator(topology).output(outplugins[args.output])
+        for vrf in zone:
+            topology = netgen.Topology(args.zone, vrf['vrf'], vrf['network'], vrf['template'])
+            netgen.NetworkGenerator(topology).output(outplugins[args.output])
 
 if __name__ == '__main__':
     main()
