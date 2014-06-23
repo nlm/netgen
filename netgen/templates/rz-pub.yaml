@@ -1,5 +1,6 @@
 zone: {{ zone }}
 network: {{ network }}
+vrf: {{ vrf }}
 subnets:
   - subnet: pub-adm
     size: 29

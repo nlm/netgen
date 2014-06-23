@@ -12,14 +12,14 @@ class NetworkGenerator(object):
         else:
             self.parse(data)
 
-    def add_zone(self, name, network):
-        zi = Zone(name, network)
+    def add_zone(self, name, network, vrf=None):
+        zi = Zone(name, network, vrf)
         self.zones.append(zi)
         return zi
 
     def parse(self, data):
         Validator().validate(data)
-        zi = self.add_zone(data['zone'], data['network'])
+        zi = self.add_zone(data['zone'], data['network'], data['vrf'])
         for subnet in data['subnets']:
             si = zi.add_subnet(subnet['subnet'], subnet['size'])
             if 'hosts' in subnet:
@@ -33,14 +33,15 @@ class NetworkGenerator(object):
 
 
 class Zone(object):
-    def __init__(self, name, network):
+    def __init__(self, name, network, vrf=None):
         self.name = name
         self.network = IPv4Network(unicode(network), strict=True)
+        self.vrf = vrf
         self.cur_addr = self.network.network_address
         self.subnets = []
 
     def __repr__(self):
-        return u'Zone({}: {})'.format(self.name, self.network)
+        return u'Zone({}: {}) [{}]'.format(self.name, self.network, self.vrf)
 
     def add_subnet(self, name, size, vlan=None):
         assert size <= 32

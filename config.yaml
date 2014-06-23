@@ -8,4 +8,4 @@ vtydc3-rz1:
 vtydc2-p10:
   - vrf: adm
     template: az
-    network: 192.168.1.0/24
+    network: 172.16.0.0/20

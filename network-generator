@@ -20,6 +20,8 @@ def main():
     ap.add_argument('--output', metavar='|'.join(outplugins.keys()),
                     type=str, choices=outplugins.keys(), default='text',
                     help='output plugin to use')
+    ap.add_argument('--vrf', metavar='VRF', type=str, default=None,
+                    help='vrf to output (default: all)')
     args = ap.parse_args()
 
     with open(args.config) as config_fd:
@@ -31,13 +33,22 @@ def main():
                 'network': lambda x: ipaddress.IPv4Network(unicode(x)),
             }]
         })
-        schema(config)
+        try:
+            schema(config)
+        except voluptuous.MultipleInvalid as e:
+            sys.exit("Error parsing config file: " + str(e))
         if args.zone not in config:
             sys.exit('zone "{}" does not exists'.format(args.zone))
         zone = config[args.zone]
         for vrf in zone:
-            topology = netgen.Topology(args.zone, vrf['vrf'], vrf['network'], vrf['template'])
-            netgen.NetworkGenerator(topology).output(outplugins[args.output])
+            if args.vrf is not None and vrf['vrf'] != args.vrf:
+                continue
+            topology = netgen.Topology(args.zone, vrf['vrf'],
+                                        vrf['network'], vrf['template'])
+            try:
+                netgen.NetworkGenerator(topology).output(outplugins[args.output])
+            except voluptuous.MultipleInvalid as e:
+                sys.exit("Error parsing input data: " + str(e))
 
 if __name__ == '__main__':
     main()

@@ -22,14 +22,15 @@ class Output(object):
 class Text(Output):
     def output_zone(self, zone, params):
         print u'#' * 50
-        print u'Zone {}'.format(zone.name)
+        print u'Zone {} vrf {}'.format(zone.name, zone.vrf)
         print u'#' * 50
 
     def output_subnet(self, subnet, params):
-        print u'Subnet {}{} is {}'.format(
+        print u'Subnet {}{} is {} in the vrf {}'.format(
             subnet.zone.name,
             subnet.name,
             subnet.network,
+            subnet.zone.vrf
         )
 
     def output_host(self, host, params):
@@ -45,12 +46,14 @@ class Bind(Output):
         print u'@ IN SOA ( XXX )'
 
     def output_subnet(self, subnet, params=None):
-        print u'; Subnet {}{}'.format(subnet.zone.name, subnet.name)
+        print u'; Subnet {}{} in vrf {}'.format(
+            subnet.zone.name,
+            subnet.name,
+            subnet.zone.vrf)
 
     def output_host(self, host, params=None):
-        print u'{}{}-{} IN A {}'.format(
+        print u'{}{} IN A {}'.format(
             host.subnet.zone.name,
-            host.subnet.name,
             host.name,
             host.address
         )
