@@ -3,12 +3,14 @@ from setuptools import setup,find_packages
 setup(
     name = "netgen",
     version = "0.0.1",
-    packages = find_packages(),
+    packages = ['netgen'],
+    include_package_data = True,
+    package_data = {'': ['templates/*']},
     author = "Nicolas Limage",
-    description = "a ip address plan generator",
+    description = "a simple ip address plan generator",
     license = "GPL",
     keywords = "ip range network space",
-    url = "https://github.com/nlm/firval",
+    url = "https://github.com/nlm/netgen",
     classifiers = [
         'Development Status :: 1 - Planning',
         'Environment :: Console',

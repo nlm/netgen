@@ -27,6 +27,8 @@ subnets:
       {%- for i in range(1,11) %}
       - cdb01-f12n{{ '%02d'|format(i) }}
       {%- endfor %}
+  - subnet: reserved
+    size: 23
   - subnet: console
     size: 23
     hosts:

@@ -1,6 +1,6 @@
 import yaml
-from ipaddress import IPv4Network,IPv4Address
-from jinja2 import Environment,PackageLoader
+from ipaddress import IPv4Network, IPv4Address
+from jinja2 import Environment, FileSystemLoader
 from .schema import Validator
 from .output import Output
 
@@ -13,9 +13,9 @@ class NetworkGenerator(object):
             self.parse(data)
 
     def add_zone(self, name, network, vrf=None):
-        zi = Zone(name, network, vrf)
-        self.zones.append(zi)
-        return zi
+        zone = Zone(name, network, vrf)
+        self.zones.append(zone)
+        return zone
 
     def parse(self, data):
         Validator().validate(data)
@@ -28,50 +28,51 @@ class NetworkGenerator(object):
 
     def output(self, output_class, params=None):
         if not issubclass(output_class, Output):
-            raise "bad out class"
+            raise Exception('bad out class: {0}'.format(output_class))
         output_class().output(self, params)
 
 
 class Zone(object):
     def __init__(self, name, network, vrf=None):
         self.name = name
-        self.network = IPv4Network(unicode(network), strict=True)
+        self.network = IPv4Network(network, strict=True)
         self.vrf = vrf
         self.cur_addr = self.network.network_address
         self.subnets = []
 
-    def __repr__(self):
-        return u'Zone({}: {}) [{}]'.format(self.name, self.network, self.vrf)
-
     def add_subnet(self, name, size, vlan=None):
         assert size <= 32
-        net = Subnet(name, u'{}/{}'.format(self.cur_addr, size), self)
+        net = Subnet(name, '{0}/{1}'.format(self.cur_addr, size), self, vlan)
         self.cur_addr += net.network.num_addresses
         self.subnets.append(net)
         return net
 
+    def __repr__(self):
+        return 'Zone({0}: {1}) [{2}]'.format(self.name, self.network, self.vrf)
+
 
 class Subnet(object):
-    def __init__(self, name, network, zone):
+    def __init__(self, name, network, zone, vlan=None):
         self.name = name
         self.hosts = []
         self.zone = zone
+        self.vlan = vlan
         try:
-            self.network = IPv4Network(unicode(network), strict=True)
+            self.network = IPv4Network(network, strict=True)
         except ValueError:
-            net = IPv4Network(unicode(network), strict=False)
+            net = IPv4Network(network, strict=False)
             addr = net.network_address
-            net2 = u'{}/{}'.format(addr + net.num_addresses, net.prefixlen)
+            net2 = '{0}/{1}'.format(addr + net.num_addresses, net.prefixlen)
             self.network = IPv4Network(net2)
-            print "Warning: {}: unaligned subnet, lost some ips".format(self.network)
+            print('warning: subnet {0} is unaligned'.format(self.network))
 
     def __repr__(self):
-        return u'Subnet({}: {})'.format(self.name, self.network)
+        return 'Subnet({0}: {1})'.format(self.name, self.network)
 
     def add_host(self, name):
         addr = self.network.network_address + 1 + len(self.hosts)
         if addr not in self.network:
-            raise Exception("subnet full")
+            raise Exception('subnet "{0}" full'.format(self.network))
         host = Host(name, addr, self)
         self.hosts.append(host)
         return host
@@ -84,15 +85,16 @@ class Host(object):
         self.subnet = subnet
 
     def __repr__(self):
-        return u'Host({}: {})'.format(self.name, self.address)
+        return 'Host({0}: {1})'.format(self.name, self.address)
+
 
 class Topology(object):
-    def __init__(self, zone, vrf, network, template):
-        self.env = Environment(loader=PackageLoader('netgen', 'templates'))
+    def __init__(self, zone, vrf, network, template, templatesdir='templates'):
+        self.env = Environment(loader=FileSystemLoader(templatesdir))
         self.template = self.env.get_template(template + '.yaml')
         self.zone = zone
         self.vrf = vrf
-        self.network = IPv4Network(unicode(network))
+        self.network = IPv4Network(network)
         self._rendered = None
         self._data = None
 
@@ -104,8 +106,7 @@ class Topology(object):
 
     def __str__(self):
         if self._rendered is None:
-            self._rendered = self.template.render(
-                                zone=self.zone,
-                                vrf=self.vrf,
-                                network=self.network)
+            self._rendered = self.template.render(zone=self.zone,
+                                                  vrf=self.vrf,
+                                                  network=self.network)
         return self._rendered
