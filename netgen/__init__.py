@@ -89,8 +89,9 @@ class Host(object):
 
 
 class Topology(object):
-    def __init__(self, zone, vrf, network, template, templatesdir='templates'):
-        self.env = Environment(loader=FileSystemLoader(templatesdir))
+    def __init__(self, zone, vrf, network, template,
+                 loader=FileSystemLoader('templates')):
+        self.env = Environment(loader=loader)
         self.template = self.env.get_template(template + '.yaml')
         self.zone = zone
         self.vrf = vrf
