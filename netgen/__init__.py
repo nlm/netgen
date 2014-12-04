@@ -2,7 +2,7 @@ import yaml
 from ipaddress import IPv4Network, IPv4Address
 from jinja2 import Environment, FileSystemLoader
 from .schema import Validator
-from .output import Output
+#from .output import Output
 
 class NetworkGenerator(object):
     def __init__(self, data):
@@ -18,18 +18,17 @@ class NetworkGenerator(object):
         return zone
 
     def parse(self, data):
-        Validator().validate(data)
-        zi = self.add_zone(data['zone'], data['network'], data['vrf'])
-        for subnet in data['subnets']:
-            si = zi.add_subnet(subnet['subnet'], subnet['size'])
-            if 'hosts' in subnet:
-                for host in subnet['hosts']:
-                    si.add_host(host)
+        data = Validator().validate(data)
+        zone = self.add_zone(data['zone'], data['network'], data['vrf'])
+        for elt in data.get('subnets', []):
+            subnet = zone.add_subnet(elt['subnet'], elt['size'])
+            for hostname in elt.get('hosts', []):
+                subnet.add_host(hostname)
 
-    def output(self, output_class, params=None):
-        if not issubclass(output_class, Output):
-            raise Exception('bad out class: {0}'.format(output_class))
-        output_class().output(self, params)
+    def render(self, template, loader):
+        self.env = Environment(loader=loader)
+        template = self.env.get_template('output/{0}.tpl'.format(template))
+        print(template.render(zones=self.zones))
 
 
 class Zone(object):
@@ -42,10 +41,10 @@ class Zone(object):
 
     def add_subnet(self, name, size, vlan=None):
         assert size <= 32
-        net = Subnet(name, '{0}/{1}'.format(self.cur_addr, size), self, vlan)
-        self.cur_addr += net.network.num_addresses
-        self.subnets.append(net)
-        return net
+        subnet = Subnet(name, '{0}/{1}'.format(self.cur_addr, size), self, vlan)
+        self.cur_addr += subnet.network.num_addresses
+        self.subnets.append(subnet)
+        return subnet
 
     def __repr__(self):
         return 'Zone({0}: {1}) [{2}]'.format(self.name, self.network, self.vrf)
@@ -82,7 +81,6 @@ class Host(object):
     def __init__(self, name, address, subnet):
         self.name = name
         self.address = IPv4Address(address)
-        self.subnet = subnet
 
     def __repr__(self):
         return 'Host({0}: {1})'.format(self.name, self.address)
@@ -92,7 +90,7 @@ class Topology(object):
     def __init__(self, zone, vrf, network, template,
                  loader=FileSystemLoader('templates')):
         self.env = Environment(loader=loader)
-        self.template = self.env.get_template(template + '.yaml')
+        self.template = self.env.get_template('topology/{0}.yaml'.format(template))
         self.zone = zone
         self.vrf = vrf
         self.network = IPv4Network(network)
