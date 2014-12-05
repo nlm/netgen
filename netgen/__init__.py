@@ -1,5 +1,6 @@
 from __future__ import print_function, unicode_literals
 from six import u
+import sys
 import yaml
 from ipaddress import IPv4Network, IPv4Address
 from jinja2 import Environment, FileSystemLoader
@@ -73,7 +74,10 @@ class NetworkGenerator(object):
 class Zone(object):
     def __init__(self, name, network, vrf=None):
         self.name = name
-        self.network = IPv4Network(u(network), strict=True)
+        self.network = IPv4Network(u(network), strict=False)
+        if network != str(self.network):
+            print('warning: fixed {0} -> {1}'.format(network, self.network),
+                  file=sys.stderr)
         self.vrf = vrf
         self.cur_addr = self.network.network_address
         self.subnets = []
@@ -115,14 +119,10 @@ class Subnet(object):
         self.name = name
         self.hosts = []
         self.vlan = vlan
-        try:
-            self.network = IPv4Network(network, strict=True)
-        except ValueError:
-            net = IPv4Network(u(network), strict=False)
-            addr = net.network_address
-            net2 = '{0}/{1}'.format(addr + net.num_addresses, net.prefixlen)
-            self.network = IPv4Network(u(net2))
-            print('warning: subnet {0} is unaligned, fixed'.format(self.network))
+        self.network = IPv4Network(network, strict=False)
+        if network != str(self.network):
+            print('warning: fixed {0} -> {1}'.format(network, self.network),
+                  file=sys.stderr)
 
     def __repr__(self):
         if self.vlan is not None:
