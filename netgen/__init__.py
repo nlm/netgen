@@ -41,7 +41,7 @@ class NetworkGenerator(object):
             Required('subnet'): Match('^[A-Za-z0-9-]+$'),
             Required('size'): int,
             Optional('vlan'): int,
-            Optional('hosts'): [Match('^[A-Za-z0-9-]+$')]
+            Optional('hosts'): [Match('^([A-Za-z0-9-]+|_)$')],
         }]
     })
 
@@ -120,6 +120,7 @@ class Subnet(object):
         self.hosts = []
         self.vlan = vlan
         self.network = IPv4Network(network, strict=False)
+        self.cur_addr = self.network.network_address
         if network != str(self.network):
             print('warning: fixed {0} -> {1}'.format(network, self.network),
                   file=sys.stderr)
@@ -140,9 +141,12 @@ class Subnet(object):
         returns:
             the created Host object
         """
-        addr = self.network.network_address + 1 + len(self.hosts)
+        self.cur_addr += 1
+        addr = self.cur_addr
         if addr not in self.network:
             raise Exception('subnet "{0}" full'.format(self.network))
+        if name == '_':
+            return None
         host = Host(name, addr)
         self.hosts.append(host)
         return host
