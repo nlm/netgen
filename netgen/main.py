@@ -49,8 +49,7 @@ def main(arguments=None):
         with open(zones_file, 'r') as zones_fd:
             zones = schema(yaml.load(zones_fd))
     except MultipleInvalid as exception:
-        #sys.exit('error parsing config file: {0}'.format(exception))
-        raise(exception)
+        sys.exit('error parsing zone file: {0}'.format(exception))
     except Exception as exception:
         sys.exit('error: {0}'.format(exception))
 
