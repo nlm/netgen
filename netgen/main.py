@@ -9,21 +9,21 @@ from netgen import NetworkGenerator, Topology
 from jinja2 import FileSystemLoader
 import netgen
 
-def main():
+def main(arguments=None):
     parser = argparse.ArgumentParser(description='generate ip address plan')
-    parser.add_argument('-d', '--data-dir', metavar='DIR', type=str,
+    parser.add_argument('--data', '-d', metavar='DIR', type=str,
                         default='.',
-                        help='the templates directory (default: ./templates)')
+                        help='the data directory (default: .)')
     parser.add_argument('--list-zones', action='store_true',
                         help='list the zones present in the config file')
-    parser.add_argument('--zone', metavar='ZONE', type=str, default='',
+    parser.add_argument('--zone', metavar='ZONE', type=str, required=True,
                         help='name of the zone to generate')
     parser.add_argument('--vrf', metavar='VRF', type=str, default=None,
                         help='vrf to output (default: all)')
     parser.add_argument('--output', metavar='TEMPLATE',
                         type=str, default='netgen',
                         help='output template to use')
-    args = parser.parse_args()
+    args = parser.parse_args(arguments)
 
     schema = Schema({
         str: [{
@@ -33,10 +33,11 @@ def main():
         }]
     })
 
-    zones_file = '{0}/zones.yaml'.format(args.data_dir)
-    templates_dir = '{0}/templates'.format(args.data_dir)
+    data_dir = args.data
+    zones_file = '{0}/zones.yaml'.format(data_dir)
+    templates_dir = '{0}/templates'.format(data_dir)
 
-    for directory in [args.data_dir, templates_dir]:
+    for directory in [data_dir, templates_dir]:
         if not os.path.isdir(directory):
             parser.error('directory not found: {0}'.format(directory))
 
@@ -51,24 +52,18 @@ def main():
     except Exception as exception:
         sys.exit('error: {0}'.format(exception))
 
-    if args.list_zones:
-        print('\n'.join(zones.keys()))
-        sys.exit(0)
-
-    if not args.zone:
-        parser.error('no zone provided, use --zone ZONE')
-
     if args.zone not in zones:
         sys.exit('zone "{0}" does not exists'.format(args.zone))
 
-    template_loader = FileSystemLoader('{}/templates'.format(args.data_dir))
+    topo_loader = FileSystemLoader('{0}/templates/topology'.format(data_dir))
+    output_loader = FileSystemLoader('{0}/templates/output'.format(data_dir))
 
     for vrf in zones[args.zone]:
         if args.vrf and vrf['vrf'] != args.vrf:
             continue
         topology = Topology(args.zone, vrf['vrf'], vrf['network'],
-                            vrf['template'], template_loader)
+                            vrf['template'], topo_loader)
         try:
-            NetworkGenerator(topology).render(args.output, template_loader)
+            NetworkGenerator(topology).render(args.output, output_loader)
         except MultipleInvalid as exception:
             sys.exit('error parsing input data: {0}'.format(exception))
