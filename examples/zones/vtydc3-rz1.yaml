@@ -1,6 +1,0 @@
-adm:
-  template: rz-adm
-  network: 172.16.240.0/20
-pub:
-  template: rz-pub
-  network: 192.168.0.0/24
