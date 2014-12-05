@@ -1,13 +1,14 @@
 #!/usr/bin/env python
+from __future__ import print_function, unicode_literals
 import sys
 import os
 import argparse
 import yaml
+from six import u
 from voluptuous import Schema, MultipleInvalid
 from ipaddress import IPv4Network
-from netgen import NetworkGenerator, Topology
 from jinja2 import FileSystemLoader
-import netgen
+from . import NetworkGenerator, Topology
 
 def main(arguments=None):
     parser = argparse.ArgumentParser(description='generate ip address plan')
@@ -29,7 +30,7 @@ def main(arguments=None):
         str: [{
             'vrf': str,
             'template': str,
-            'network': lambda x : str(IPv4Network(x))
+            'network': lambda x : str(IPv4Network(u(x)))
         }]
     })
 
@@ -48,7 +49,8 @@ def main(arguments=None):
         with open(zones_file, 'r') as zones_fd:
             zones = schema(yaml.load(zones_fd))
     except MultipleInvalid as exception:
-        sys.exit('error parsing config file: {0}'.format(exception))
+        #sys.exit('error parsing config file: {0}'.format(exception))
+        raise(exception)
     except Exception as exception:
         sys.exit('error: {0}'.format(exception))
 

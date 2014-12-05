@@ -1,3 +1,5 @@
+from __future__ import print_function, unicode_literals
+from six import u
 import yaml
 from ipaddress import IPv4Network, IPv4Address
 from jinja2 import Environment, FileSystemLoader
@@ -10,7 +12,7 @@ class Topology(object):
         self.template = env.get_template('{0}.yaml'.format(template))
         self.zone = zone
         self.vrf = vrf
-        self.network = IPv4Network(network)
+        self.network = IPv4Network(u(network))
         self._rendered = None
         self._data = None
 
@@ -32,7 +34,7 @@ class NetworkGenerator(object):
 
     topology_schema = Schema({
         Required('zone'): Match('^[A-Za-z0-9-]+$'),
-        Required('network'): lambda x: str(IPv4Network(x)),
+        Required('network'): lambda x: str(IPv4Network(u(x))),
         Required('vrf'): Match('^[A-Za-z0-9-]+$'),
         Required('subnets'): [{
             Required('subnet'): Match('^[A-Za-z0-9-]+$'),
@@ -71,7 +73,7 @@ class NetworkGenerator(object):
 class Zone(object):
     def __init__(self, name, network, vrf=None):
         self.name = name
-        self.network = IPv4Network(network, strict=True)
+        self.network = IPv4Network(u(network), strict=True)
         self.vrf = vrf
         self.cur_addr = self.network.network_address
         self.subnets = []
@@ -116,10 +118,10 @@ class Subnet(object):
         try:
             self.network = IPv4Network(network, strict=True)
         except ValueError:
-            net = IPv4Network(network, strict=False)
+            net = IPv4Network(u(network), strict=False)
             addr = net.network_address
             net2 = '{0}/{1}'.format(addr + net.num_addresses, net.prefixlen)
-            self.network = IPv4Network(net2)
+            self.network = IPv4Network(u(net2))
             print('warning: subnet {0} is unaligned, fixed'.format(self.network))
 
     def __repr__(self):
