@@ -2,17 +2,15 @@ from setuptools import setup,find_packages
 
 setup(
     name = "netgen",
-    version = "0.0.1",
+    version = "0.2.0",
     packages = ['netgen'],
-    include_package_data = True,
-    package_data = {'': ['templates/*']},
     author = "Nicolas Limage",
-    description = "a simple ip address plan generator",
+    description = "a templated ip address plan generator",
     license = "GPL",
     keywords = "ip range network space",
     url = "https://github.com/nlm/netgen",
     classifiers = [
-        'Development Status :: 1 - Planning',
+        'Development Status :: 4 - Beta',
         'Environment :: Console',
         'Intended Audience :: System Administrators',
         'License :: OSI Approved :: GNU General Public License (GPL)',
@@ -31,4 +29,5 @@ setup(
             'network-generator = netgen.main:main',
         ],
     },
+    test_suite = 'netgen.unittest',
 )
