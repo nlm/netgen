@@ -94,7 +94,18 @@ class Zone(object):
             the created Subnet object
         """
         assert size <= 32
-        subnet = Subnet(name, '{0}/{1}'.format(self.cur_addr, size), vlan)
+        # looking for next subnet address
+        try:
+            network = IPv4Network('{0}/{1}'.format(self.cur_addr, size), strict=True)
+        except ValueError:
+            net1 = IPv4Network('{0}/{1}'.format(self.cur_addr, size), strict=False)
+            addr = net1.network_address
+            net2 = '{0}/{1}'.format(addr + net1.num_addresses, net1.prefixlen)
+            network = IPv4Network(net2)
+            print('warning: {0}: unaligned subnet, lost some ips'.format(network),
+                  file=sys.stderr)
+        # building the subnet
+        subnet = Subnet(name, u(str(network)), vlan)
         self.cur_addr += subnet.network.num_addresses
         self.subnets.append(subnet)
         return subnet
