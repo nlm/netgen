@@ -23,6 +23,7 @@ setup(
         'PyYAML',
         'voluptuous>=0.8.0',
         'ipaddress',
+        'six',
     ],
     entry_points = {
         'console_scripts': [
