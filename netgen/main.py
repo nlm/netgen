@@ -36,14 +36,15 @@ def main(arguments=None):
 
     data_dir = args.data
     zones_file = '{0}/zones.yaml'.format(data_dir)
-    templates_dir = '{0}/templates'.format(data_dir)
-
-    for directory in [data_dir, templates_dir]:
-        if not os.path.isdir(directory):
-            parser.error('directory not found: {0}'.format(directory))
+    topology_dir = '{0}/topology'.format(data_dir)
+    output_dir = '{0}/output'.format(data_dir)
 
     if not os.path.isfile(zones_file):
         parser.error('file not found: {0}'.format(zones_file))
+
+    for directory in [data_dir, topology_dir, output_dir]:
+        if not os.path.isdir(directory):
+            parser.error('directory not found: {0}'.format(directory))
 
     try:
         with open(zones_file, 'r') as zones_fd:
@@ -56,8 +57,8 @@ def main(arguments=None):
     if args.zone not in zones:
         sys.exit('zone "{0}" does not exists'.format(args.zone))
 
-    topo_loader = FileSystemLoader('{0}/templates/topology'.format(data_dir))
-    output_loader = FileSystemLoader('{0}/templates/output'.format(data_dir))
+    topo_loader = FileSystemLoader(topology_dir)
+    output_loader = FileSystemLoader(output_dir)
 
     for vrf in zones[args.zone]:
         if args.vrf and vrf['vrf'] != args.vrf:
