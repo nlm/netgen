@@ -171,10 +171,18 @@ class IPv4Subnet(Subnet):
         returns:
             the created Host object
         """
-        self.cur_addr += 1
-        addr = self.cur_addr
-        if addr not in self.network:
-            raise Exception('subnet "{0}" full'.format(self.network))
+        if self.network.prefixlen < 30:
+            self.cur_addr += 1
+            addr = self.cur_addr
+            if (addr not in self.network or
+                addr == self.network.broadcast_address):
+                raise Exception('subnet "{0}" full'.format(self.network))
+        else:
+            addr = self.cur_addr
+            if addr not in self.network:
+                raise Exception('subnet "{0}" full'.format(self.network))
+            self.cur_addr += 1
+
         if name == '_':
             return None
         host = IPv4Host(name, addr)
