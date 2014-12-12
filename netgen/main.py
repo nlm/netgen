@@ -8,7 +8,7 @@ from six import u
 from voluptuous import Schema, MultipleInvalid
 from ipaddress import IPv4Network
 from jinja2 import FileSystemLoader
-from . import NetworkGenerator, Topology
+from . import IPv4NetworkGenerator, IPv4Topology
 
 def main(arguments=None):
     parser = argparse.ArgumentParser(description='generate ip address plan')
@@ -63,9 +63,9 @@ def main(arguments=None):
     for vrf in zones[args.zone]:
         if args.vrf and vrf['vrf'] != args.vrf:
             continue
-        topology = Topology(args.zone, vrf['vrf'], vrf['network'],
+        topology = IPv4Topology(args.zone, vrf['vrf'], vrf['network'],
                             vrf['template'], topo_loader)
         try:
-            NetworkGenerator(topology).render(args.output, output_loader)
+            IPv4NetworkGenerator(topology).render(args.output, output_loader)
         except MultipleInvalid as exception:
             sys.exit('error parsing input data: {0}'.format(exception))

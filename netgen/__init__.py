@@ -6,7 +6,12 @@ from ipaddress import IPv4Network, IPv4Address
 from jinja2 import Environment, FileSystemLoader
 from voluptuous import Schema, Match, Required, Optional
 
+
 class Topology(object):
+    pass
+
+
+class IPv4Topology(Topology):
     def __init__(self, zone, vrf, network, template,
                  loader=FileSystemLoader('templates')):
         env = Environment(loader=loader)
@@ -47,13 +52,13 @@ class NetworkGenerator(object):
 
     def __init__(self, data):
         self.zones = []
-        if isinstance(data, Topology):
+        if isinstance(data, IPv4Topology):
             self.parse(data.data)
         else:
             self.parse(data)
 
     def add_zone(self, name, network, vrf=None):
-        zone = Zone(name, network, vrf)
+        zone = IPv4Zone(name, network, vrf)
         self.zones.append(zone)
         return zone
 
@@ -71,7 +76,7 @@ class NetworkGenerator(object):
         print(template.render(zones=self.zones))
 
 
-class Zone(object):
+class IPv4Zone(object):
     def __init__(self, name, network, vrf=None):
         self.name = name
         self.network = IPv4Network(u(network), strict=False)
@@ -105,7 +110,7 @@ class Zone(object):
             print('warning: {0}: unaligned subnet, lost some ips'.format(network),
                   file=sys.stderr)
         # building the subnet
-        subnet = Subnet(name, u(str(network)), vlan)
+        subnet = IPv4Subnet(name, u(str(network)), vlan)
         self.cur_addr += subnet.network.num_addresses
         self.subnets.append(subnet)
         return subnet
@@ -115,6 +120,14 @@ class Zone(object):
 
 
 class Subnet(object):
+    def __init__(self, name, network, vlan=None):
+        raise NotImplementedError()
+
+    def add_host(self, name):
+        raise NotImplementedError()
+
+
+class IPv4Subnet(Subnet):
     """
     Object representing a Subnet
     """
@@ -158,12 +171,20 @@ class Subnet(object):
             raise Exception('subnet "{0}" full'.format(self.network))
         if name == '_':
             return None
-        host = Host(name, addr)
+        host = IPv4Host(name, addr)
         self.hosts.append(host)
         return host
 
 
+class IPv6Subnet(Subnet):
+    pass
+
+
 class Host(object):
+    pass
+
+
+class IPv4Host(Host):
     """
     Object representing a Host
     """
@@ -180,3 +201,6 @@ class Host(object):
 
     def __repr__(self):
         return 'Host({0}: {1})'.format(self.name, self.address)
+
+class IPv6Host(Host):
+    pass

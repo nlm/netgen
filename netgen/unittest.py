@@ -1,10 +1,10 @@
 import unittest
 import netgen
 
-class Host(unittest.TestCase):
+class IPv4Host(unittest.TestCase):
 
     def setUp(self):
-        self.host = netgen.Host('testhost', '192.168.2.34')
+        self.host = netgen.IPv4Host('testhost', '192.168.2.34')
 
     def test_host_name(self):
         self.assertEqual(self.host.name, 'testhost')
@@ -13,10 +13,10 @@ class Host(unittest.TestCase):
         self.assertEqual(str(self.host.address), '192.168.2.34')
 
 
-class SimpleSubnet(unittest.TestCase):
+class SimpleIPv4Subnet(unittest.TestCase):
 
     def setUp(self):
-        self.subnet = netgen.Subnet('testsub', '192.168.10.0/24')
+        self.subnet = netgen.IPv4Subnet('testsub', '192.168.10.0/24')
 
     def test_name(self):
         self.assertEqual(self.subnet.name, 'testsub')
@@ -25,10 +25,10 @@ class SimpleSubnet(unittest.TestCase):
         self.assertEqual(str(self.subnet.network), '192.168.10.0/24')
 
 
-class VlanSubnet(unittest.TestCase):
+class VlanIPv4Subnet(unittest.TestCase):
 
     def setUp(self):
-        self.subnet = netgen.Subnet('testsub', '192.168.10.0/24', 12)
+        self.subnet = netgen.IPv4Subnet('testsub', '192.168.10.0/24', 12)
 
     def test_name(self):
         self.assertEqual(self.subnet.name, 'testsub')
@@ -40,10 +40,10 @@ class VlanSubnet(unittest.TestCase):
         self.assertEqual(self.subnet.vlan, 12)
 
 
-class UnalignedSubnet(unittest.TestCase):
+class UnalignedIPv4Subnet(unittest.TestCase):
 
     def setUp(self):
-        self.subnet = netgen.Subnet('testsub', '192.168.23.45/24')
+        self.subnet = netgen.IPv4Subnet('testsub', '192.168.23.45/24')
 
     def test_name(self):
         self.assertEqual(self.subnet.name, 'testsub')
@@ -52,10 +52,10 @@ class UnalignedSubnet(unittest.TestCase):
         self.assertEqual(str(self.subnet.network), '192.168.23.0/24')
 
 
-class SimpleZone(unittest.TestCase):
+class SimpleIPv4Zone(unittest.TestCase):
 
     def setUp(self):
-        self.zone = netgen.Zone('testzone', '192.168.20.0/23')
+        self.zone = netgen.IPv4Zone('testzone', '192.168.20.0/23')
 
     def test_name(self):
         self.assertEqual(self.zone.name, 'testzone')
@@ -70,10 +70,10 @@ class SimpleZone(unittest.TestCase):
     def test_subnets(self):
         self.assertEqual(self.zone.subnets, [])
 
-class UnalignedZone(unittest.TestCase):
+class UnalignedIPv4Zone(unittest.TestCase):
 
     def setUp(self):
-        self.zone = netgen.Zone('testzone', '192.168.21.10/23')
+        self.zone = netgen.IPv4Zone('testzone', '192.168.21.10/23')
 
     def test_name(self):
         self.assertEqual(self.zone.name, 'testzone')
