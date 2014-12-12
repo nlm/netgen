@@ -37,13 +37,17 @@ class IPv4Topology(Topology):
 
 
 class NetworkGenerator(object):
+    pass
+
+
+class IPv4NetworkGenerator(NetworkGenerator):
 
     topology_schema = Schema({
         Required('zone'): Match('^[A-Za-z0-9-]+$'),
         Required('network'): lambda x: str(IPv4Network(u(x))),
         Required('vrf'): Match('^[A-Za-z0-9-]+$'),
         Required('subnets'): [{
-            Required('subnet'): Match('^[A-Za-z0-9-]+$'),
+            Required('subnet'): Match('^([A-Za-z0-9-]+|_)$'),
             Required('size'): int,
             Optional('vlan'): int,
             Optional('hosts'): [Match('^([A-Za-z0-9-]+|_)$')],
@@ -112,6 +116,8 @@ class IPv4Zone(object):
         # building the subnet
         subnet = IPv4Subnet(name, u(str(network)), vlan)
         self.cur_addr += subnet.network.num_addresses
+        if name == '_':
+            return None
         self.subnets.append(subnet)
         return subnet
 
