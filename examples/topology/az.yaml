@@ -1,23 +1,44 @@
-zone: {{ zone }}
-network: {{ network }}
-vrf: {{ vrf }}
+zone: '{{ zone }}'
+network: '{{ network }}'
+vrf: '{{ vrf }}'
 subnets:
 {%- set subnet = 'cons' %}
-  - subnet: {{ subnet }}
+  - subnet: '{{ subnet }}'
     size: 26
     hosts:
-      - {{ zone }}{{ subnet }}-gw
-      {%- for i in range(1,3) %}
-      - {{ zone }}{{ subnet }}-gw{{ "%02d"|format(i) }}
+      - '{{ zone }}{{ subnet }}-gw'
+      {%- for i in range(1) %}
+      - '{{ zone }}{{ subnet }}-gw{{ "%02d"|format(i + 1) }}'
       {%- endfor %}
 {%- set subnet = 'pub' %}
-  - subnet: {{ subnet }}
+  - subnet: '{{ subnet }}'
     size: 26
     hosts:
-      - {{ zone }}{{ subnet }}-gw
-      {%- for i in range(1,3) %}
-      - {{ zone }}{{ subnet }}-gw{{ "%02d"|format(i) }}
+      - '{{ zone }}{{ subnet }}-gw'
+      {%- for i in range(2) %}
+      - '{{ zone }}{{ subnet }}-gw{{ "%02d"|format(i + 1) }}'
       {%- endfor %}
-      {%- for i in range(1,30) %}
-      - {{ zone }}{{ subnet }}-srv{{ "%02d"|format(i) }}
+      {%- for i in range(2) %}
+      - '{{ zone }}{{ subnet }}-srv{{ "%02d"|format(i + 1) }}'
+      {%- endfor %}
+{%- set subnet = 'reserved' %}
+  - subnet: '_'
+    size: 26
+{%- set subnet = 'interco' %}
+  - subnet: '{{ subnet }}'
+    size: 31
+    hosts:
+      {%- for i in range(1) %}
+      - '_'
+      - '{{ zone }}{{ subnet }}-interco{{ "%02d"|format(i + 1) }}'
+      {%- endfor %}
+{%- set subnet = '_' %}
+  - subnet: '{{ subnet }}'
+    size: 32
+{%- set subnet = 'host' %}
+  - subnet: '{{ subnet }}'
+    size: 32
+    hosts:
+      {%- for i in range(1) %}
+      - '{{ zone }}{{ subnet }}-host{{ "%02d"|format(i + 1) }}'
       {%- endfor %}
