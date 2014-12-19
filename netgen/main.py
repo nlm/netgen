@@ -5,10 +5,10 @@ import os
 import argparse
 import yaml
 from six import u
-from voluptuous import Schema, MultipleInvalid
+from voluptuous import Schema, MultipleInvalid, Optional, Required
 from ipaddress import IPv4Network
 from jinja2 import FileSystemLoader
-from . import IPv4NetworkGenerator, IPv4Topology
+from .engine import IPv4NetworkGenerator, IPv4Topology
 
 def main(arguments=None):
     parser = argparse.ArgumentParser(description='generate ip address plan')
@@ -21,6 +21,8 @@ def main(arguments=None):
                         help='name of the zone to generate')
     parser.add_argument('--vrf', metavar='VRF', type=str, default=None,
                         help='vrf to output (default: all)')
+    parser.add_argument('--with-hosts', action='store_true', default=False,
+                        help='show hosts')
     parser.add_argument('--output', metavar='TEMPLATE',
                         type=str, default='netgen',
                         help='output template to use')
@@ -28,9 +30,10 @@ def main(arguments=None):
 
     schema = Schema({
         str: [{
-            'vrf': str,
-            'template': str,
-            'network': lambda x : str(IPv4Network(u(x)))
+            Required('vrf'): str,
+            Required('template'): str,
+            Required('network'): lambda x : str(IPv4Network(u(x))),
+            Optional('base_vlan'): int,
         }]
     })
 
@@ -60,12 +63,13 @@ def main(arguments=None):
     topo_loader = FileSystemLoader(topology_dir)
     output_loader = FileSystemLoader(output_dir)
 
-    for vrf in zones[args.zone]:
-        if args.vrf and vrf['vrf'] != args.vrf:
+    for subzone in zones[args.zone]:
+        if args.vrf and subzone['vrf'] != args.vrf:
             continue
-        topology = IPv4Topology(args.zone, vrf['vrf'], vrf['network'],
-                            vrf['template'], topo_loader)
+        topology = IPv4Topology(args.zone, subzone['vrf'], subzone['network'],
+                            subzone['template'], topo_loader,
+                            base_vlan=subzone.get('base_vlan', 0))
         try:
-            IPv4NetworkGenerator(topology).render(args.output, output_loader)
+            print(IPv4NetworkGenerator(topology).render(args.output, output_loader, args.with_hosts).encode('utf-8'))
         except MultipleInvalid as exception:
             sys.exit('error parsing input data: {0}'.format(exception))
