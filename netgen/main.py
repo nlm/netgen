@@ -15,15 +15,13 @@ def main(arguments=None):
     parser.add_argument('--data', '-d', metavar='DIR', type=str,
                         default='.',
                         help='the data directory (default: .)')
-    parser.add_argument('--list-zones', action='store_true',
-                        help='list the zones present in the config file')
-    parser.add_argument('--zone', metavar='ZONE', type=str, required=True,
-                        help='name of the zone to generate')
-    parser.add_argument('--vrf', metavar='VRF', type=str, default=None,
+    parser.add_argument('--zone', '-z', metavar='ZONE', type=str,
+                        required=True, help='name of the zone to generate')
+    parser.add_argument('--vrf', '-v',  metavar='VRF', type=str, default=None,
                         help='vrf to output (default: all)')
-    parser.add_argument('--with-hosts', action='store_true', default=False,
-                        help='show hosts')
-    parser.add_argument('--output', metavar='TEMPLATE',
+    parser.add_argument('--with-hosts', '-H', action='store_true',
+                        default=False, help='show hosts')
+    parser.add_argument('--output-template', '-t', metavar='TEMPLATE',
                         type=str, default='netgen',
                         help='output template to use')
     args = parser.parse_args(arguments)
@@ -70,6 +68,8 @@ def main(arguments=None):
                             subzone['template'], topo_loader,
                             base_vlan=subzone.get('base_vlan', 0))
         try:
-            print(IPv4NetworkGenerator(topology).render(args.output, output_loader, args.with_hosts).encode('utf-8'))
+            print(IPv4NetworkGenerator(topology)
+                  .render(args.output, output_loader, args.with_hosts)
+                  .encode('utf-8'))
         except MultipleInvalid as exception:
             sys.exit('error parsing input data: {0}'.format(exception))

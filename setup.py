@@ -28,7 +28,8 @@ setup(
     entry_points = {
         'console_scripts': [
             'network-generator = netgen.main:main',
+            'netgen = netgen.main:main',
         ],
     },
-    test_suite = 'netgen.unittest',
+    test_suite = 'netgen.test',
 )
