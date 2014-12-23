@@ -69,7 +69,7 @@ def main(arguments=None):
                             base_vlan=subzone.get('base_vlan', 0))
         try:
             print(IPv4NetworkGenerator(topology)
-                  .render(args.output, output_loader, args.with_hosts)
+                  .render(args.output_template, output_loader, args.with_hosts)
                   .encode('utf-8'))
         except MultipleInvalid as exception:
             sys.exit('error parsing input data: {0}'.format(exception))
