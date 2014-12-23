@@ -20,7 +20,7 @@ class IPv4Topology(Topology):
         self.zone = zone
         self.vrf = vrf
         self.base_vlan = 0
-        self.network = IPv4Network(u(network))
+        self.network = IPv4Network(u(str(network)))
         self._rendered = None
         self._data = None
 
@@ -47,7 +47,7 @@ class IPv4NetworkGenerator(NetworkGenerator):
 
     topology_schema = Schema({
         Required('zone'): Match('^[A-Za-z0-9-]+$'),
-        Required('network'): lambda x: str(IPv4Network(u(x))),
+        Required('network'): lambda x: str(IPv4Network(u(str(x)))),
         Required('vrf'): Match('^[A-Za-z0-9-]+$'),
         Required('subnets'): [{
             Required('subnet'): Match('^([A-Za-z0-9-]+|_)$'),
@@ -86,7 +86,7 @@ class IPv4NetworkGenerator(NetworkGenerator):
 class IPv4Zone(object):
     def __init__(self, name, network, vrf=None):
         self.name = name
-        self.network = IPv4Network(u(network), strict=False)
+        self.network = IPv4Network(u(str(network)), strict=False)
         if network != str(self.network):
             print('warning: fixed {0} -> {1}'.format(network, self.network),
                   file=sys.stderr)
@@ -224,7 +224,7 @@ class IPv4Host(Host):
             address: IP address of the host
         """
         self.name = name
-        self.address = IPv4Address(address)
+        self.address = IPv4Address(u(str(address)))
 
     def __repr__(self):
         return 'Host({0}: {1})'.format(self.name, self.address)
