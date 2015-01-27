@@ -8,6 +8,7 @@ from six import u
 from voluptuous import Schema, MultipleInvalid, Optional, Required
 from ipaddress import IPv4Network
 from jinja2 import FileSystemLoader
+from jinja2.exceptions import TemplateNotFound
 from .engine import IPv4NetworkGenerator, IPv4Topology
 
 def main(arguments=None):
@@ -73,3 +74,5 @@ def main(arguments=None):
                   .encode('utf-8'))
         except MultipleInvalid as exception:
             sys.exit('error parsing input data: {0}'.format(exception))
+        except TemplateNotFound as exception:
+            sys.exit('template not found: {0}'.format(exception))
