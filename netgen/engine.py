@@ -7,6 +7,13 @@ from jinja2 import Environment, FileSystemLoader
 from voluptuous import Schema, Match, Required, Optional
 
 
+def dot_reverse(value):
+    return ".".join(reversed(str(value).split(".")))
+
+def add_custom_filters(environment):
+    environment.filters['dotreverse'] = dot_reverse
+
+
 class Topology(object):
     pass
 
@@ -16,6 +23,7 @@ class IPv4Topology(Topology):
                  loader=FileSystemLoader('templates'),
                  base_vlan=0):
         env = Environment(loader=loader)
+        add_custom_filters(env)
         self.template = env.get_template('{0}.yaml'.format(template))
         self.zone = zone
         self.vrf = vrf
@@ -79,6 +87,7 @@ class IPv4NetworkGenerator(NetworkGenerator):
 
     def render(self, template, loader, with_hosts=False):
         env = Environment(loader=loader)
+        add_custom_filters(env)
         template = env.get_template('{0}.tpl'.format(template))
         return template.render(zones=self.zones, with_hosts=with_hosts)
 
