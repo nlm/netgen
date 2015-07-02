@@ -3,7 +3,7 @@ network: '{{ network }}'
 vrf: '{{ vrf }}'
 subnets:
 {%- set subnet = 'mgt' %}
-  - subnet: '{{ subnet }}'
+  - name: '{{ subnet }}'
     size: 23
     hosts:
       - '{{ zone }}{{ subnet }}-gw'
@@ -23,10 +23,10 @@ subnets:
       - '{{ zone }}{{ subnet }}-machin{{ '%02d'|format(i) }}'
       {%- endfor %}
 {%- set subnet = '_' %}
-  - subnet: '{{ subnet }}'
+  - name: '{{ subnet }}'
     size: 23
 {%- set subnet = 'console' %}
-  - subnet: '{{ subnet }}'
+  - name: '{{ subnet }}'
     size: 23
     hosts:
       - '{{ zone }}{{ subnet }}-gw'

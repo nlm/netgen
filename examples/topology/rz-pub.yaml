@@ -3,13 +3,13 @@ network: '{{ network }}'
 vrf: '{{ vrf }}'
 subnets:
 {%- set subnet = 'pub-adm' %}
-  - subnet: '{{ subnet }}'
+  - name: '{{ subnet }}'
     size: 29
 {%- set subnet = 'pub-lb' %}
-  - subnet: '{{ subnet }}'
+  - name: '{{ subnet }}'
     size: 29
 {%- set subnet = 'pub-svc' %}
-  - subnet: '{{ subnet }}'
+  - name: '{{ subnet }}'
     size: 28
     hosts:
       - '{{ zone }}{{ subnet }}-gw'
