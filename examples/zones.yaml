@@ -1,11 +1,13 @@
 rz0:
   - vrf: 'adm'
-    template: 'rz-adm'
+    topology: 'rz-adm'
     network: '172.16.240.0/20'
+    properties:
+      basevlan: 0
   - vrf: 'pub'
-    template: 'rz-pub'
+    topology: 'rz-pub'
     network: '192.168.0.0/24'
 az10:
   - vrf: 'adm'
-    template: 'az'
+    topology: 'az'
     network: '172.16.0.0/20'
