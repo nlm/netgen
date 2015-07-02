@@ -24,6 +24,8 @@ def main(arguments=None):
     parser.add_argument('--output-template', '-t', metavar='TEMPLATE',
                         type=str, default='netgen',
                         help='output template to use')
+    parser.add_argument('--dump-topology', action='store_true', default=False,
+                        help='dump the rendered topology instead of the output')
     args = parser.parse_args(arguments)
 
     schema = Schema({
@@ -68,9 +70,13 @@ def main(arguments=None):
                                 subzone['topology'], loader=topo_loader,
                                 properties=subzone.get('properties'))
         try:
-            print(IPv4NetworkGenerator(topology)
-                  .render(args.output_template, output_loader, args.with_hosts)
-                  .encode('utf-8'))
+            if args.dump_topology is True:
+                print('# topology: {0}\n'.format(subzone['topology']))
+                print(topology)
+            else:
+                print(IPv4NetworkGenerator(topology)
+                      .render(args.output_template, output_loader, args.with_hosts)
+                      .encode('utf-8'))
         except MultipleInvalid as exception:
             sys.exit('error parsing topology: {0}'.format(exception))
         except TemplateNotFound as exception:
