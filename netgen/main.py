@@ -5,7 +5,7 @@ import os
 import argparse
 import yaml
 from six import u
-from voluptuous import Schema, MultipleInvalid, Optional, Required
+from voluptuous import Schema, MultipleInvalid, Optional, Required, Extra
 from ipaddress import IPv4Network
 from jinja2 import FileSystemLoader
 from jinja2.exceptions import TemplateNotFound
@@ -14,8 +14,7 @@ from .engine import IPv4NetworkGenerator, IPv4Topology
 def main(arguments=None):
     parser = argparse.ArgumentParser(description='generate ip address plan')
     parser.add_argument('--data', '-d', metavar='DIR', type=str,
-                        default='.',
-                        help='the data directory (default: .)')
+                        default='.', help='the data directory (default: .)')
     parser.add_argument('--zone', '-z', metavar='ZONE', type=str,
                         required=True, help='name of the zone to generate')
     parser.add_argument('--vrf', '-v',  metavar='VRF', type=str, default=None,
@@ -30,9 +29,9 @@ def main(arguments=None):
     schema = Schema({
         str: [{
             Required('vrf'): str,
-            Required('template'): str,
+            Required('topology'): str,
             Required('network'): lambda x : str(IPv4Network(u(x))),
-            Optional('base_vlan'): int,
+            Optional('properties'): { Extra: object },
         }]
     })
 
@@ -66,13 +65,13 @@ def main(arguments=None):
         if args.vrf and subzone['vrf'] != args.vrf:
             continue
         topology = IPv4Topology(args.zone, subzone['vrf'], subzone['network'],
-                            subzone['template'], topo_loader,
-                            base_vlan=subzone.get('base_vlan', 0))
+                                subzone['topology'], loader=topo_loader,
+                                properties=subzone.get('properties'))
         try:
             print(IPv4NetworkGenerator(topology)
                   .render(args.output_template, output_loader, args.with_hosts)
                   .encode('utf-8'))
         except MultipleInvalid as exception:
-            sys.exit('error parsing input data: {0}'.format(exception))
+            sys.exit('error parsing topology: {0}'.format(exception))
         except TemplateNotFound as exception:
             sys.exit('template not found: {0}'.format(exception))

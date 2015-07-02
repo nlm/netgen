@@ -4,7 +4,7 @@ import sys
 import yaml
 from ipaddress import IPv4Network, IPv4Address
 from jinja2 import Environment, FileSystemLoader
-from voluptuous import Schema, Match, Required, Optional
+from voluptuous import Schema, Match, Required, Optional, MultipleInvalid
 
 
 def dot_reverse(value):
@@ -19,16 +19,17 @@ class Topology(object):
 
 
 class IPv4Topology(Topology):
-    def __init__(self, zone, vrf, network, template,
-                 loader=FileSystemLoader('templates'),
-                 base_vlan=0):
+    def __init__(self, zone, vrf, network, template, properties=None, loader=None):
+        if loader is None:
+            loader = FileSystemLoader('templates')
         env = Environment(loader=loader)
         add_custom_filters(env)
         self.template = env.get_template('{0}.yaml'.format(template))
         self.zone = zone
         self.vrf = vrf
-        self.base_vlan = 0
+        self.properties = 0
         self.network = IPv4Network(u(str(network)))
+        self.properties = properties if properties is not None else {}
         self._rendered = None
         self._data = None
 
@@ -40,10 +41,11 @@ class IPv4Topology(Topology):
 
     def __str__(self):
         if self._rendered is None:
-            self._rendered = self.template.render(zone=self.zone,
-                                                  vrf=self.vrf,
-                                                  network=self.network,
-                                                  base_vlan=self.base_vlan)
+            self._rendered = self.template.render(
+                zone=self.zone,
+                vrf=self.vrf,
+                network=self.network,
+                properties=self.properties)
         return self._rendered
 
 
@@ -58,7 +60,7 @@ class IPv4NetworkGenerator(NetworkGenerator):
         Required('network'): lambda x: str(IPv4Network(u(str(x)))),
         Required('vrf'): Match('^[A-Za-z0-9-]+$'),
         Required('subnets'): [{
-            Required('subnet'): Match('^([A-Za-z0-9-]+|_)$'),
+            Required('name'): Match('^([A-Za-z0-9-]+|_)$'),
             Required('size'): int,
             Optional('vlan'): int,
             Optional('hosts'): [Match('^([A-Za-z0-9-]+|_)$')],
@@ -79,9 +81,10 @@ class IPv4NetworkGenerator(NetworkGenerator):
 
     def parse(self, data):
         data = self.topology_schema(data)
+
         zone = self.add_zone(data['zone'], data['network'], data['vrf'])
         for elt in data.get('subnets', []):
-            subnet = zone.add_subnet(elt['subnet'], elt['size'], elt.get('vlan'))
+            subnet = zone.add_subnet(elt['name'], elt['size'], elt.get('vlan'))
             for hostname in elt.get('hosts', []):
                 subnet.add_host(hostname)
 
