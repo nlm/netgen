@@ -11,6 +11,7 @@ from jinja2 import FileSystemLoader
 from jinja2.exceptions import TemplateNotFound
 from .engine import IPv4NetworkGenerator, IPv4Topology
 
+
 def main(arguments=None):
     parser = argparse.ArgumentParser(description='generate ip address plan')
     parser.add_argument('--data', '-d', metavar='DIR', type=str,

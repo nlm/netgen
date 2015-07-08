@@ -22,7 +22,7 @@ class IPv4Topology(Topology):
     def __init__(self, zone, vrf, network, template, properties=None, loader=None):
         if loader is None:
             loader = FileSystemLoader('templates')
-        env = Environment(loader=loader)
+        env = Environment(loader=loader, extensions=['jinja2.ext.do'])
         add_custom_filters(env)
         self.template = env.get_template('{0}.yaml'.format(template))
         self.zone = zone
@@ -89,7 +89,7 @@ class IPv4NetworkGenerator(NetworkGenerator):
                 subnet.add_host(hostname)
 
     def render(self, template, loader, with_hosts=False):
-        env = Environment(loader=loader)
+        env = Environment(loader=loader, extensions=['jinja2.ext.do'])
         add_custom_filters(env)
         template = env.get_template('{0}.tpl'.format(template))
         return template.render(zones=self.zones, with_hosts=with_hosts)
