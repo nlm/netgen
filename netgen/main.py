@@ -22,7 +22,7 @@ def main(arguments=None):
                         help='vrf to output (default: all)')
     parser.add_argument('--with-hosts', '-H', action='store_true',
                         default=False, help='show hosts')
-    parser.add_argument('--output-template', '-t', metavar='TEMPLATE',
+    parser.add_argument('--output-template', '-o', metavar='TEMPLATE',
                         type=str, default='netgen',
                         help='output template to use')
     parser.add_argument('--dump-topology', action='store_true', default=False,
