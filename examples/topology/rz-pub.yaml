@@ -1,0 +1,26 @@
+zone: '{{ zone }}'
+network: '{{ network }}'
+vrf: '{{ vrf }}'
+subnets:
+{%- set subnet = 'pub-adm' %}
+  - name: '{{ subnet }}'
+    size: 29
+{%- set subnet = 'pub-lb' %}
+  - name: '{{ subnet }}'
+    size: 29
+{%- set subnet = 'pub-svc' %}
+  - name: '{{ subnet }}'
+    size: 28
+    hosts:
+      - '{{ zone }}{{ subnet }}-gw'
+      {% for i in range(1, 3) %}
+      - '{{ zone }}{{ subnet }}-gw-{{ '%02d'|format(i) }}'
+      {% endfor %}
+      - '{{ zone }}{{ subnet }}-ns-01'
+      - '{{ zone }}{{ subnet }}-lb-01'
+      {% for i in range(1, 3) %}
+      - '{{ zone }}{{ subnet }}-smtp-{{ '%02d'|format(i) }}'
+      {% endfor %}
+      {% for name in ['admin', 'billing', 'ticket', 'image'] %}
+      - '{{ zone }}{{ subnet }}-{{ name }}-01'
+      {% endfor %}

@@ -1,6 +1,0 @@
-loc1-pf1:
-  type: az
-  network: 192.168.0.0/24
-loc1-pf2:
-  type: az
-  network: 192.168.1.0/24
