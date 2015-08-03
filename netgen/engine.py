@@ -49,6 +49,10 @@ class IPv4Topology(Topology):
         return self._rendered
 
 
+class IPv6Topology(Topology):
+    pass
+
+
 class NetworkGenerator(object):
     pass
 
@@ -93,6 +97,10 @@ class IPv4NetworkGenerator(NetworkGenerator):
         add_custom_filters(env)
         template = env.get_template('{0}.tpl'.format(template))
         return template.render(zones=self.zones, with_hosts=with_hosts)
+
+
+class IPv6NetworkGenerator(NetworkGenerator):
+    pass
 
 
 class IPv4Zone(object):
@@ -240,6 +248,7 @@ class IPv4Host(Host):
 
     def __repr__(self):
         return 'Host({0}: {1})'.format(self.name, self.address)
+
 
 class IPv6Host(Host):
     pass
