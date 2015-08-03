@@ -2,11 +2,12 @@ from __future__ import print_function, unicode_literals
 from six import u
 import sys
 import yaml
+import re
 from ipaddress import IPv4Network, IPv4Address
 from jinja2 import Environment, FileSystemLoader
 from voluptuous import Schema, Match, Required, Optional, MultipleInvalid
 
-from .exception import NetworkFull
+from .exception import NetworkFull, ConfigError
 
 
 def dot_reverse(value):
@@ -70,7 +71,7 @@ class IPv4NetworkGenerator(NetworkGenerator):
             Required('name'): Match('^([A-Za-z0-9-]+|_)$'),
             Required('size'): int,
             Optional('vlan'): int,
-            Optional('hosts'): [Match('^([A-Za-z0-9-]+|_)$')],
+            Optional('hosts'): [Match('^([A-Za-z0-9-]+|_(/\d+)?)$')],
         }]
     })
 
@@ -91,9 +92,24 @@ class IPv4NetworkGenerator(NetworkGenerator):
 
         zone = self.add_zone(data['zone'], data['network'], data['vrf'])
         for elt in data.get('subnets', []):
-            subnet = zone.add_subnet(elt['name'], elt['size'], elt.get('vlan'))
+            try:
+                subnet = zone.add_subnet(elt['name'], elt['size'],
+                                         elt.get('vlan'))
+            except NetworkFull:
+                raise NetworkFull('network full while adding subnet "{0}" ' \
+                                  'to network {1} of zone "{2}"' \
+                                  .format(elt['name'], data['network'],
+                                          data['zone']))
+
             for hostname in elt.get('hosts', []):
-                subnet.add_host(hostname)
+                try:
+                    subnet.add_host(hostname)
+                except NetworkFull:
+                    raise NetworkFull('network full while adding host "{0}" ' \
+                                      'to subnet "{1}" in network "{2}" ' \
+                                      'of zone "{3}"' \
+                                      .format(hostname, elt['name'],
+                                              data['network'], data['zone']))
 
     def render(self, template, loader, with_hosts=True):
         env = Environment(loader=loader, extensions=['jinja2.ext.do'])
@@ -144,7 +160,7 @@ class IPv4Zone(object):
         # checking ownership
         if (subnet.network.network_address < self.network.network_address or
             subnet.network.broadcast_address > self.network.broadcast_address):
-            raise NetworkFull('zone "{0}" ({1}) full while adding subnet "{2}")'.format(self.name, self.network, subnet.name))
+            raise NetworkFull
         self.cur_addr += subnet.network.num_addresses
         if name == '_':
             return None
@@ -201,6 +217,13 @@ class IPv4Subnet(Subnet):
         else:
             return 'Subnet({0}: {1})'.format(self.name, self.network)
 
+    def nextip(self, prefixlen):
+        if not 0 < prefixlen < 32:
+            raise ConfigError('invalid padding prefixlen: {0}'.format(prefixlen))
+        tmpnet = IPv4Network('{0}/{1}'.format(self.cur_addr, prefixlen),
+                             strict=False)
+        return tmpnet.network_address + tmpnet.num_addresses + 1
+
     def add_host(self, name):
         """
         Adds a host to this subnet
@@ -212,13 +235,16 @@ class IPv4Subnet(Subnet):
         """
         addr = self.cur_addr
         if addr not in self.network or addr > self.max_addr:
-            raise NetworkFull('subnet "{0}" ({1}) full '
-                              'while adding host "{2}"'.format(self.name,
-                                                               self.network,
-                                                               name))
+            raise NetworkFull
         self.cur_addr += 1
+        # check for special directives
         if name == '_':
             return None
+        match = re.match(r'^_/(\d+)$', name)
+        if match:
+            self.cur_addr = self.nextip(int(match.group(1)))
+            return None
+
         host = IPv4Host(name, addr)
         self.hosts.append(host)
         return host
