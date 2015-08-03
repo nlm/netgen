@@ -31,5 +31,5 @@ setup(
             'netgen = netgen.main:main',
         ],
     },
-    test_suite = 'netgen.test',
+    test_suite = 'test_netgen',
 )
