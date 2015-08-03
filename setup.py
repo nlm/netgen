@@ -2,7 +2,7 @@ from setuptools import setup,find_packages
 
 setup(
     name = "netgen",
-    version = "0.3.0",
+    version = "0.4a1",
     packages = ['netgen'],
     author = "Nicolas Limage",
     description = "a templated ip address plan generator",
