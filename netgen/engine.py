@@ -92,7 +92,7 @@ class IPv4NetworkGenerator(NetworkGenerator):
             for hostname in elt.get('hosts', []):
                 subnet.add_host(hostname)
 
-    def render(self, template, loader, with_hosts=False):
+    def render(self, template, loader, with_hosts=True):
         env = Environment(loader=loader, extensions=['jinja2.ext.do'])
         add_custom_filters(env)
         template = env.get_template('{0}.tpl'.format(template))

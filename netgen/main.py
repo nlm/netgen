@@ -20,8 +20,8 @@ def main(arguments=None):
                         required=True, help='name of the zone to generate')
     parser.add_argument('--vrf', '-v',  metavar='VRF', type=str, default=None,
                         help='vrf to output (default: all)')
-    parser.add_argument('--with-hosts', '-H', action='store_true',
-                        default=False, help='show hosts')
+    parser.add_argument('--without-hosts', '-H', action='store_true',
+                        default=False, help='hide hosts')
     parser.add_argument('--output-template', '-o', metavar='TEMPLATE',
                         type=str, default='netgen',
                         help='output template to use')
@@ -76,7 +76,9 @@ def main(arguments=None):
                 print(topology)
             else:
                 print(IPv4NetworkGenerator(topology)
-                      .render(args.output_template, output_loader, args.with_hosts)
+                      .render(args.output_template,
+                              output_loader,
+                              not args.without_hosts)
                       .encode('utf-8'))
         except MultipleInvalid as exception:
             sys.exit('error parsing topology: {0}'.format(exception))
