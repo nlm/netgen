@@ -6,9 +6,12 @@ from ipaddress import IPv4Network, IPv4Address
 from jinja2 import Environment, FileSystemLoader
 from voluptuous import Schema, Match, Required, Optional, MultipleInvalid
 
+from .exception import NetworkFull
+
 
 def dot_reverse(value):
     return ".".join(reversed(str(value).split(".")))
+
 
 def add_custom_filters(environment):
     environment.filters['dotreverse'] = dot_reverse
@@ -141,7 +144,7 @@ class IPv4Zone(object):
         # checking ownership
         if (subnet.network.network_address < self.network.network_address or
             subnet.network.broadcast_address > self.network.broadcast_address):
-            raise Exception('zone "{0}" ({1}) full while adding subnet "{2}")'.format(self.name, self.network, subnet.name))
+            raise NetworkFull('zone "{0}" ({1}) full while adding subnet "{2}")'.format(self.name, self.network, subnet.name))
         self.cur_addr += subnet.network.num_addresses
         if name == '_':
             return None
@@ -177,7 +180,16 @@ class IPv4Subnet(Subnet):
         self.hosts = []
         self.vlan = vlan
         self.network = IPv4Network(network, strict=False)
-        self.cur_addr = self.network.network_address
+
+        if self.network.prefixlen >= 31:
+            self.min_addr = self.network.network_address
+            self.max_addr = self.network.broadcast_address
+        else:
+            self.min_addr = self.network.network_address + 1
+            self.max_addr = self.network.broadcast_address - 1
+
+        self.cur_addr = self.min_addr
+
         if network != str(self.network):
             print('warning: fixed {0} -> {1}'.format(network, self.network),
                   file=sys.stderr)
@@ -198,24 +210,13 @@ class IPv4Subnet(Subnet):
         returns:
             the created Host object
         """
-        if self.network.prefixlen < 30:
-            self.cur_addr += 1
-            addr = self.cur_addr
-            if (addr not in self.network or
-                addr == self.network.broadcast_address):
-                raise Exception('subnet "{0}" ({1}) full '
-                                'while adding host "{2}"'.format(self.name,
+        addr = self.cur_addr
+        if addr not in self.network or addr > self.max_addr:
+            raise NetworkFull('subnet "{0}" ({1}) full '
+                              'while adding host "{2}"'.format(self.name,
                                                                self.network,
                                                                name))
-        else:
-            addr = self.cur_addr
-            if addr not in self.network:
-                raise Exception('subnet "{0}" ({1}) full '
-                                'while adding host "{2}"'.format(self.name,
-                                                                 self.network,
-                                                                 name))
-            self.cur_addr += 1
-
+        self.cur_addr += 1
         if name == '_':
             return None
         host = IPv4Host(name, addr)
