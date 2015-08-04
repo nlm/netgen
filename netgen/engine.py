@@ -72,6 +72,7 @@ class IPv4NetworkGenerator(NetworkGenerator):
             Required('size'): int,
             Optional('vlan'): int,
             Optional('align'): int,
+            Optional('mtu'): int,
             Optional('hosts'): [Match('^([A-Za-z0-9-]+|_(/\d+)?)$')],
         }]
     })
@@ -95,7 +96,9 @@ class IPv4NetworkGenerator(NetworkGenerator):
         for elt in data.get('subnets', []):
             try:
                 subnet = zone.add_subnet(elt['name'], elt['size'],
-                                         elt.get('vlan'), elt.get('align'))
+                                         vlan=elt.get('vlan'),
+                                         align=elt.get('align'),
+                                         mtu=elt.get('mtu'))
             except NetworkFull:
                 raise NetworkFull('network full while adding subnet "{0}" ' \
                                   'to network {1} of zone "{2}"' \
@@ -134,7 +137,7 @@ class IPv4Zone(object):
         self.cur_addr = self.network.network_address
         self.subnets = []
 
-    def add_subnet(self, name, size, vlan=None, align=None):
+    def add_subnet(self, name, size, vlan=None, align=None, mtu=None):
         """
         Adds a subnet to this zone
 
@@ -173,7 +176,7 @@ class IPv4Zone(object):
             print('warning: {0}: unaligned subnet, lost some ips'.format(network), file=sys.stderr)
             self.cur_addr = network.network_address
         # building the subnet
-        subnet = IPv4Subnet(name, u(str(network)), vlan)
+        subnet = IPv4Subnet(name, u(str(network)), vlan, mtu)
         # checking ownership
         if (subnet.network.network_address < self.network.network_address or
             subnet.network.broadcast_address > self.network.broadcast_address):
@@ -200,7 +203,7 @@ class IPv4Subnet(Subnet):
     """
     Object representing a Subnet
     """
-    def __init__(self, name, network, vlan=None):
+    def __init__(self, name, network, vlan=None, mtu=None):
         """
         Subject object initialization
 
@@ -212,6 +215,7 @@ class IPv4Subnet(Subnet):
         self.name = name
         self.hosts = []
         self.vlan = vlan
+        self.mtu = mtu
         self.network = IPv4Network(network, strict=False)
 
         if self.network.prefixlen >= 31:
