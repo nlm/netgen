@@ -71,6 +71,7 @@ class IPv4NetworkGenerator(NetworkGenerator):
             Required('name'): Match('^([A-Za-z0-9-]+|_)$'),
             Required('size'): int,
             Optional('vlan'): int,
+            Optional('align'): int,
             Optional('hosts'): [Match('^([A-Za-z0-9-]+|_(/\d+)?)$')],
         }]
     })
@@ -94,7 +95,7 @@ class IPv4NetworkGenerator(NetworkGenerator):
         for elt in data.get('subnets', []):
             try:
                 subnet = zone.add_subnet(elt['name'], elt['size'],
-                                         elt.get('vlan'))
+                                         elt.get('vlan'), elt.get('align'))
             except NetworkFull:
                 raise NetworkFull('network full while adding subnet "{0}" ' \
                                   'to network {1} of zone "{2}"' \
@@ -133,7 +134,7 @@ class IPv4Zone(object):
         self.cur_addr = self.network.network_address
         self.subnets = []
 
-    def add_subnet(self, name, size, vlan=None):
+    def add_subnet(self, name, size, vlan=None, align=None):
         """
         Adds a subnet to this zone
 
@@ -144,7 +145,23 @@ class IPv4Zone(object):
         returns:
             the created Subnet object
         """
-        assert size <= 32
+        if not 0 <= size <= 32:
+            raise ConfigError('subnet size must be between 0 and 32')
+
+        # align if asked
+        if align is not None:
+            try:
+                network = IPv4Network('{0}/{1}'.format(self.cur_addr, align), strict=True)
+            except ValueError:
+                network = IPv4Network('{0}/{1}'.format(self.cur_addr, align), strict=False)
+                self.cur_addr = network.network_address + network.num_addresses
+
+        # if size is 0, subnet is shadow
+        if size == 0:
+            if name == '_':
+                return None
+            raise ConfigError('zero-sized subnets must be named "_"')
+
         # looking for next subnet address
         try:
             network = IPv4Network('{0}/{1}'.format(self.cur_addr, size), strict=True)
