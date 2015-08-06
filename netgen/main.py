@@ -21,6 +21,8 @@ def main(arguments=None):
                         required=True, help='name of the zone to generate')
     parser.add_argument('--vrf', '-v',  metavar='VRF', type=str, default=None,
                         help='vrf to output (default: all)')
+    parser.add_argument('--free', '-f', action='store_true', default=False,
+                        help='output free networks')
     parser.add_argument('--without-hosts', '-H', action='store_true',
                         default=False, help='hide hosts')
     parser.add_argument('--output-template', '-o', metavar='TEMPLATE',
@@ -76,7 +78,8 @@ def main(arguments=None):
                 print('# topology: {0}\n'.format(subzone['topology']))
                 print(topology)
             else:
-                print(IPv4NetworkGenerator(topology)
+                print(IPv4NetworkGenerator(topology,
+                                           showfree=args.free)
                       .render(args.output_template,
                               output_loader,
                               not args.without_hosts)

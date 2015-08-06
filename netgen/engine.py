@@ -7,7 +7,7 @@ from ipaddress import IPv4Network, IPv4Address
 from jinja2 import Environment, FileSystemLoader
 from voluptuous import Schema, Match, Required, Optional, MultipleInvalid
 
-from .exception import NetworkFull, ConfigError
+from .exception import NetworkFull, ConfigError, UnalignedSubnet
 
 
 def dot_reverse(value):
@@ -77,28 +77,31 @@ class IPv4NetworkGenerator(NetworkGenerator):
         }]
     })
 
-    def __init__(self, data):
+    def __init__(self, data, showfree=False):
+        self.showfree=showfree
         self.zones = []
         if isinstance(data, IPv4Topology):
             self.parse(data.data)
         else:
             self.parse(data)
 
-    def add_zone(self, name, network, vrf=None):
-        zone = IPv4Zone(name, network, vrf)
+    def add_zone(self, name, network, vrf=None, showfree=False):
+        zone = IPv4Zone(name, network, vrf, showfree=showfree)
         self.zones.append(zone)
         return zone
 
     def parse(self, data):
         data = self.topology_schema(data)
 
-        zone = self.add_zone(data['zone'], data['network'], data['vrf'])
+        zone = self.add_zone(data['zone'], data['network'], data['vrf'],
+                             showfree=self.showfree)
         for elt in data.get('subnets', []):
             try:
                 subnet = zone.add_subnet(elt['name'], elt['size'],
                                          vlan=elt.get('vlan'),
                                          align=elt.get('align'),
                                          mtu=elt.get('mtu'))
+                # catch UnalignedSubnet here for padding
             except NetworkFull:
                 raise NetworkFull('network full while adding subnet "{0}" ' \
                                   'to network {1} of zone "{2}"' \
@@ -115,6 +118,18 @@ class IPv4NetworkGenerator(NetworkGenerator):
                                       .format(hostname, elt['name'],
                                               data['network'], data['zone']))
 
+        # fill the rest of the zone with empty networks
+        if self.showfree:
+            while zone.cur_addr < zone.network.broadcast_address:
+                for size in range(zone.network.prefixlen, 32):
+                    try:
+                        zone.add_subnet('_', size, 0, None, None)
+                        break
+                    except NetworkFull:
+                        pass
+                    except UnalignedSubnet:
+                        pass
+
     def render(self, template, loader, with_hosts=True):
         env = Environment(loader=loader, extensions=['jinja2.ext.do'])
         add_custom_filters(env)
@@ -127,13 +142,14 @@ class IPv6NetworkGenerator(NetworkGenerator):
 
 
 class IPv4Zone(object):
-    def __init__(self, name, network, vrf=None):
+    def __init__(self, name, network, vrf=None, showfree=True):
         self.name = name
         self.network = IPv4Network(u(str(network)), strict=False)
         if network != str(self.network):
             print('warning: fixed {0} -> {1}'.format(network, self.network),
                   file=sys.stderr)
         self.vrf = vrf
+        self.showfree = showfree
         self.cur_addr = self.network.network_address
         self.subnets = []
 
@@ -173,17 +189,24 @@ class IPv4Zone(object):
             addr = net1.network_address
             net2 = '{0}/{1}'.format(addr + net1.num_addresses, net1.prefixlen)
             network = IPv4Network(net2)
-            print('warning: {0}: unaligned subnet, lost some ips'.format(network), file=sys.stderr)
-            self.cur_addr = network.network_address
-        # building the subnet
-        subnet = IPv4Subnet(name, u(str(network)), vlan, mtu)
-        # checking ownership
-        if (subnet.network.network_address < self.network.network_address or
-            subnet.network.broadcast_address > self.network.broadcast_address):
+
+        # checking is subnet fits
+        if (network.network_address < self.network.network_address or
+            network.broadcast_address > self.network.broadcast_address):
             raise NetworkFull
-        self.cur_addr += subnet.network.num_addresses
-        if name == '_':
+
+        # checking for unaligned subnets
+        if network.network_address > self.cur_addr:
+            raise UnalignedSubnet('unaligned subnet {0}'.format(network))
+
+        # shifting current address
+        self.cur_addr = network.network_address + network.num_addresses
+
+        if name == '_' and not self.showfree:
             return None
+
+        # adding the subnet object
+        subnet = IPv4Subnet(name, u(str(network)), vlan, mtu)
         self.subnets.append(subnet)
         return subnet
 

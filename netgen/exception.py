@@ -5,3 +5,6 @@ class NetworkFull(Exception):
 
 class ConfigError(Exception):
     pass
+
+class UnalignedSubnet(Exception):
+    pass
