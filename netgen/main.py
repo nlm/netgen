@@ -10,6 +10,7 @@ from ipaddress import IPv4Network
 from jinja2 import FileSystemLoader
 from jinja2.exceptions import TemplateNotFound
 from .engine import IPv4NetworkGenerator, IPv4Topology
+from .exception import NetworkFull, ConfigError
 
 
 def main(arguments=None):
@@ -20,8 +21,10 @@ def main(arguments=None):
                         required=True, help='name of the zone to generate')
     parser.add_argument('--vrf', '-v',  metavar='VRF', type=str, default=None,
                         help='vrf to output (default: all)')
-    parser.add_argument('--with-hosts', '-H', action='store_true',
-                        default=False, help='show hosts')
+    parser.add_argument('--free', '-f', action='store_true', default=False,
+                        help='output free networks')
+    parser.add_argument('--without-hosts', '-H', action='store_true',
+                        default=False, help='hide hosts')
     parser.add_argument('--output-template', '-o', metavar='TEMPLATE',
                         type=str, default='netgen',
                         help='output template to use')
@@ -75,10 +78,17 @@ def main(arguments=None):
                 print('# topology: {0}\n'.format(subzone['topology']))
                 print(topology)
             else:
-                print(IPv4NetworkGenerator(topology)
-                      .render(args.output_template, output_loader, args.with_hosts)
+                print(IPv4NetworkGenerator(topology,
+                                           showfree=args.free)
+                      .render(args.output_template,
+                              output_loader,
+                              not args.without_hosts)
                       .encode('utf-8'))
         except MultipleInvalid as exception:
             sys.exit('error parsing topology: {0}'.format(exception))
         except TemplateNotFound as exception:
             sys.exit('template not found: {0}'.format(exception))
+        except NetworkFull as exception:
+            sys.exit('network full: {0}'.format(exception))
+        except ConfigError as exception:
+            sys.exit('config error: {0}'.format(exception))
