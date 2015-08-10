@@ -10,7 +10,7 @@ from ipaddress import IPv4Network
 from jinja2 import FileSystemLoader
 from jinja2.exceptions import TemplateNotFound
 from .engine import IPv4NetworkGenerator, IPv4Topology
-from .exception import NetworkFull, ConfigError
+from .exception import NetworkFull, ConfigError, UnalignedSubnet
 
 
 def main(arguments=None):
@@ -92,3 +92,5 @@ def main(arguments=None):
             sys.exit('network full: {0}'.format(exception))
         except ConfigError as exception:
             sys.exit('config error: {0}'.format(exception))
+        except UnalignedSubnet as exception:
+            sys.exit('unaligned subnet: {0}'.format(exception))

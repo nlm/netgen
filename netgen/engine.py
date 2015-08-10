@@ -197,7 +197,8 @@ class IPv4Zone(object):
 
         # checking for unaligned subnets
         if network.network_address > self.cur_addr:
-            raise UnalignedSubnet('unaligned subnet {0} ({1}, should be {2})' \
+            raise UnalignedSubnet('unaligned subnet "{0}" ({1}, ' \
+                                  'should be {2})' \
                                   .format(name, network, self.cur_addr))
 
         # shifting current address
