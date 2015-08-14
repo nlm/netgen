@@ -29,15 +29,15 @@ def main(arguments=None):
                         type=str, default='netgen',
                         help='output template to use')
     parser.add_argument('--dump-topology', action='store_true', default=False,
-                        help='dump the rendered topology instead of the output')
+                        help='dump the rendered topology instead')
     args = parser.parse_args(arguments)
 
     schema = Schema({
         str: [{
             Required('vrf'): str,
             Required('topology'): str,
-            Required('network'): lambda x : str(IPv4Network(u(x))),
-            Optional('properties'): { Extra: object },
+            Required('network'): lambda x: str(IPv4Network(u(x))),
+            Optional('properties'): {Extra: object},
         }]
     })
 

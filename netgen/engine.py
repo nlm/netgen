@@ -23,7 +23,9 @@ class Topology(object):
 
 
 class IPv4Topology(Topology):
-    def __init__(self, zone, vrf, network, template, properties=None, loader=None):
+    def __init__(self, zone, vrf, network, template,
+                 properties=None, loader=None):
+
         if loader is None:
             loader = FileSystemLoader('templates')
         env = Environment(loader=loader, extensions=['jinja2.ext.do'])
@@ -78,7 +80,7 @@ class IPv4NetworkGenerator(NetworkGenerator):
     })
 
     def __init__(self, data, showfree=False):
-        self.showfree=showfree
+        self.showfree = showfree
         self.zones = []
         if isinstance(data, IPv4Topology):
             self.parse(data.data)
@@ -103,8 +105,8 @@ class IPv4NetworkGenerator(NetworkGenerator):
                                          mtu=elt.get('mtu'))
                 # catch UnalignedSubnet here for padding
             except NetworkFull:
-                raise NetworkFull('network full while adding subnet "{0}" ' \
-                                  'to network {1} of zone "{2}"' \
+                raise NetworkFull('network full while adding subnet "{0}" '
+                                  'to network {1} of zone "{2}"'
                                   .format(elt['name'], data['network'],
                                           data['zone']))
 
@@ -112,9 +114,9 @@ class IPv4NetworkGenerator(NetworkGenerator):
                 try:
                     subnet.add_host(hostname)
                 except NetworkFull:
-                    raise NetworkFull('network full while adding host "{0}" ' \
-                                      'to subnet "{1}" in network "{2}" ' \
-                                      'of zone "{3}"' \
+                    raise NetworkFull('network full while adding host "{0}" '
+                                      'to subnet "{1}" in network "{2}" '
+                                      'of zone "{3}"'
                                       .format(hostname, elt['name'],
                                               data['network'], data['zone']))
 
@@ -170,9 +172,11 @@ class IPv4Zone(object):
         # align if asked
         if align is not None:
             try:
-                network = IPv4Network('{0}/{1}'.format(self.cur_addr, align), strict=True)
+                network = IPv4Network('{0}/{1}'.format(self.cur_addr, align),
+                                      strict=True)
             except ValueError:
-                network = IPv4Network('{0}/{1}'.format(self.cur_addr, align), strict=False)
+                network = IPv4Network('{0}/{1}'.format(self.cur_addr, align),
+                                      strict=False)
                 self.cur_addr = network.network_address + network.num_addresses
 
         # if size is 0, subnet is shadow
@@ -183,22 +187,24 @@ class IPv4Zone(object):
 
         # looking for next subnet address
         try:
-            network = IPv4Network('{0}/{1}'.format(self.cur_addr, size), strict=True)
+            network = IPv4Network('{0}/{1}'.format(self.cur_addr, size),
+                                  strict=True)
         except ValueError:
-            net1 = IPv4Network('{0}/{1}'.format(self.cur_addr, size), strict=False)
+            net1 = IPv4Network('{0}/{1}'.format(self.cur_addr, size),
+                               strict=False)
             addr = net1.network_address
             net2 = '{0}/{1}'.format(addr + net1.num_addresses, net1.prefixlen)
             network = IPv4Network(net2)
 
         # checking is subnet fits
         if (network.network_address < self.network.network_address or
-            network.broadcast_address > self.network.broadcast_address):
+           network.broadcast_address > self.network.broadcast_address):
             raise NetworkFull
 
         # checking for unaligned subnets
         if network.network_address > self.cur_addr:
-            raise UnalignedSubnet('unaligned subnet "{0}" ({1}, ' \
-                                  'should be {2})' \
+            raise UnalignedSubnet('unaligned subnet "{0}" ({1}, '
+                                  'should be {2})'
                                   .format(name, network, self.cur_addr))
 
         # shifting current address
@@ -265,7 +271,8 @@ class IPv4Subnet(Subnet):
 
     def nextip(self, prefixlen):
         if not 0 < prefixlen < 32:
-            raise ConfigError('invalid padding prefixlen: {0}'.format(prefixlen))
+            raise ConfigError('invalid padding prefixlen: {0}'
+                              .format(prefixlen))
         tmpnet = IPv4Network('{0}/{1}'.format(self.cur_addr, prefixlen),
                              strict=False)
         return tmpnet.network_address + tmpnet.num_addresses + 1
