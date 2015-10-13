@@ -30,6 +30,8 @@ def main(arguments=None):
                         help='output template to use')
     parser.add_argument('--dump-topology', action='store_true', default=False,
                         help='dump the rendered topology instead')
+    parser.add_argument('--version', action='store_true', default=False,
+                        help='show version')
     args = parser.parse_args(arguments)
 
     schema = Schema({
@@ -37,7 +39,7 @@ def main(arguments=None):
             Required('vrf'): str,
             Required('topology'): str,
             Required('network'): lambda x: str(IPv4Network(u(x))),
-            Optional('properties'): {Extra: object},
+            Optional('params'): {Extra: object},
         }]
     })
 
@@ -72,7 +74,7 @@ def main(arguments=None):
             continue
         topology = IPv4Topology(args.zone, subzone['vrf'], subzone['network'],
                                 subzone['topology'], loader=topo_loader,
-                                properties=subzone.get('properties'))
+                                params=subzone.get('params'))
         try:
             if args.dump_topology is True:
                 print('# topology: {0}\n'.format(subzone['topology']))

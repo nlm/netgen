@@ -24,7 +24,7 @@ class Topology(object):
 
 class IPv4Topology(Topology):
     def __init__(self, zone, vrf, network, template,
-                 properties=None, loader=None):
+                 params=None, loader=None):
 
         if loader is None:
             loader = FileSystemLoader('templates')
@@ -33,9 +33,9 @@ class IPv4Topology(Topology):
         self.template = env.get_template('{0}.yaml'.format(template))
         self.zone = zone
         self.vrf = vrf
-        self.properties = 0
+        self.params = 0
         self.network = IPv4Network(u(str(network)))
-        self.properties = properties if properties is not None else {}
+        self.params = params if params is not None else {}
         self._rendered = None
         self._data = None
 
@@ -51,7 +51,7 @@ class IPv4Topology(Topology):
                 zone=self.zone,
                 vrf=self.vrf,
                 network=self.network,
-                properties=self.properties)
+                params=self.params)
         return self._rendered
 
 
@@ -104,6 +104,7 @@ class IPv4NetworkGenerator(NetworkGenerator):
                                          align=elt.get('align'),
                                          mtu=elt.get('mtu'))
                 # catch UnalignedSubnet here for padding
+                # fill for addfreesubnets
             except NetworkFull:
                 raise NetworkFull('network full while adding subnet "{0}" '
                                   'to network {1} of zone "{2}"'
