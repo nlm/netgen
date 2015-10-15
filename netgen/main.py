@@ -5,15 +5,15 @@ import os
 import argparse
 import yaml
 from six import u
-from voluptuous import Schema, MultipleInvalid, Optional, Required, Extra
-from ipaddress import IPv4Network
+from voluptuous import Schema, MultipleInvalid, Optional, Required, Extra, Any
+from ipaddress import IPv4Network, IPv6Network
 from jinja2 import FileSystemLoader
 from jinja2.exceptions import TemplateNotFound
-from .engine import IPv4NetworkGenerator, IPv4Topology
+from .engine import IPv4NetworkGenerator, IPv6NetworkGenerator, Topology
 from .exception import NetworkFull, ConfigError, UnalignedSubnet
 
+def parse_arguments(arguments):
 
-def main(arguments=None):
     parser = argparse.ArgumentParser(description='generate ip address plan')
     parser.add_argument('--data', '-d', metavar='DIR', type=str,
                         default='.', help='the data directory (default: .)')
@@ -21,8 +21,8 @@ def main(arguments=None):
                         required=True, help='name of the zone to generate')
     parser.add_argument('--vrf', '-v',  metavar='VRF', type=str, default=None,
                         help='vrf to output (default: all)')
-    parser.add_argument('--free', '-f', action='store_true', default=False,
-                        help='output free networks')
+#    parser.add_argument('--free', '-f', action='store_true', default=False,
+#                        help='output free networks')
     parser.add_argument('--without-hosts', '-H', action='store_true',
                         default=False, help='hide hosts')
     parser.add_argument('--output-template', '-o', metavar='TEMPLATE',
@@ -30,18 +30,24 @@ def main(arguments=None):
                         help='output template to use')
     parser.add_argument('--dump-topology', action='store_true', default=False,
                         help='dump the rendered topology instead')
-    parser.add_argument('--version', action='store_true', default=False,
-                        help='show version')
-    args = parser.parse_args(arguments)
+    return parser.parse_args(arguments)
+
+
+def main(arguments=None):
+
+    args = parse_arguments(arguments)
 
     schema = Schema({
         str: [{
             Required('vrf'): str,
             Required('topology'): str,
-            Required('network'): lambda x: str(IPv4Network(u(x))),
+            Required('network'): Any(lambda x: str(IPv4Network(u(x))),
+                                     lambda x: str(IPv6Network(u(x)))),
             Optional('params'): {Extra: object},
         }]
     })
+
+    # Check for required files and directories
 
     data_dir = args.data
     zones_file = '{0}/zones.yaml'.format(data_dir)
@@ -54,6 +60,8 @@ def main(arguments=None):
     for directory in [data_dir, topology_dir, output_dir]:
         if not os.path.isdir(directory):
             parser.error('directory not found: {0}'.format(directory))
+
+    # Parsing Zone file
 
     try:
         with open(zones_file, 'r') as zones_fd:
@@ -72,20 +80,29 @@ def main(arguments=None):
     for subzone in zones[args.zone]:
         if args.vrf and subzone['vrf'] != args.vrf:
             continue
-        topology = IPv4Topology(args.zone, subzone['vrf'], subzone['network'],
+
+        try:
+            topology = Topology(args.zone, subzone['vrf'], subzone['network'],
                                 subzone['topology'], loader=topo_loader,
                                 params=subzone.get('params'))
-        try:
+
             if args.dump_topology is True:
                 print('# topology: {0}\n'.format(subzone['topology']))
                 print(topology)
-            else:
-                print(IPv4NetworkGenerator(topology,
-                                           showfree=args.free)
-                      .render(args.output_template,
-                              output_loader,
-                              not args.without_hosts)
-                      .encode('utf-8'))
+                continue
+
+            if topology.ipversion == 4:
+                NetworkGenerator = IPv4NetworkGenerator
+            elif topology.ipversion == 6:
+                NetworkGenerator = IPv6NetworkGenerator
+
+            print(NetworkGenerator(topology,
+                                   showfree=False)
+                  .render(args.output_template,
+                          output_loader,
+                          not args.without_hosts)
+                  .encode('utf-8'))
+
         except MultipleInvalid as exception:
             sys.exit('error parsing topology: {0}'.format(exception))
         except TemplateNotFound as exception:
