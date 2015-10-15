@@ -55,11 +55,11 @@ def main(arguments=None):
     output_dir = '{0}/output'.format(data_dir)
 
     if not os.path.isfile(zones_file):
-        parser.error('file not found: {0}'.format(zones_file))
+        sys.exit('file not found: {0}'.format(zones_file))
 
     for directory in [data_dir, topology_dir, output_dir]:
         if not os.path.isdir(directory):
-            parser.error('directory not found: {0}'.format(directory))
+            sys.exit('directory not found: {0}'.format(directory))
 
     # Parsing Zone file
 
