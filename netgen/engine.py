@@ -373,17 +373,22 @@ class NetworkGenerator(object):
     def render(self, template, loader, with_hosts=True):
         env = Environment(loader=loader, extensions=['jinja2.ext.do'])
         add_custom_filters(env)
+        add_custom_functions(env)
         template = env.get_template('{0}.tpl'.format(template))
-        return template.render(zones=self.zones, with_hosts=with_hosts)
+        return template.render(zones=self.zones,
+                               ipversion=self.ipversion,
+                               with_hosts=with_hosts)
 
 
 class IPv4NetworkGenerator(NetworkGenerator):
 
     Zone = IPv4Zone
+    ipversion = 4
 
 
 class IPv6NetworkGenerator(NetworkGenerator):
 
     Zone = IPv6Zone
+    ipversion = 6
 
 
