@@ -9,15 +9,29 @@ from ipaddress import AddressValueError
 from jinja2 import Environment, FileSystemLoader
 from voluptuous import Schema, Match, Required, Optional, MultipleInvalid, Any
 
-from .exception import NetworkFull, ConfigError, UnalignedSubnet
+from .exception import NetworkFull, ConfigError, UnalignedSubnet, ParameterError
 
 
 def dot_reverse(value):
     return ".".join(reversed(str(value).split(".")))
 
 
+def ipver(ipversion, valuev4, valuev6):
+    if ipversion == 4:
+        return valuev4
+    elif ipversion == 6:
+        return valuev6
+    else:
+        raise ParameterError('invalid value for ipversion: {0}'
+                             .format(ipversion))
+
+
 def add_custom_filters(environment):
     environment.filters['dotreverse'] = dot_reverse
+
+
+def add_custom_functions(environment):
+    environment.globals['ipv46'] = ipver
 
 
 class Topology(object):
@@ -26,8 +40,11 @@ class Topology(object):
                  params=None, loader=None):
         if loader is None:
             loader = FileSystemLoader('templates')
-        env = Environment(loader=loader, extensions=['jinja2.ext.do'])
+        env = Environment(loader=loader,
+                          extensions=['jinja2.ext.do',
+                                      'jinja2.ext.loopcontrols'])
         add_custom_filters(env)
+        add_custom_functions(env)
         self.template = env.get_template('{0}.yaml'.format(template))
         self.zone = zone
         self.vrf = vrf
@@ -59,7 +76,8 @@ class Topology(object):
                 zone=self.zone,
                 vrf=self.vrf,
                 network=self.network,
-                params=self.params)
+                params=self.params,
+                ipversion=self.ipversion)
         return self._rendered
 
 
@@ -185,7 +203,7 @@ class IPv6Subnet(Subnet):
 
 class Zone(object):
 
-    def __init__(self, name, network, vrf=None, showfree=True):
+    def __init__(self, name, network, vrf=None, showfree=False):
         self.name = name
         self.network = self.Network(u(str(network)), strict=False)
         if network != str(self.network):

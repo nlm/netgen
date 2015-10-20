@@ -11,3 +11,7 @@ class ConfigError(Exception):
 
 class UnalignedSubnet(Exception):
     pass
+
+
+class ParameterError(Exception):
+    pass
