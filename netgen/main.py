@@ -30,7 +30,17 @@ def parse_arguments(arguments):
                         help='output template to use')
     parser.add_argument('--dump-topology', action='store_true', default=False,
                         help='dump the rendered topology instead')
-    return parser.parse_args(arguments)
+    parser.add_argument('--ipv4', '-4', action='store_true', default=False,
+                        help='only output ipv4 entries')
+    parser.add_argument('--ipv6', '-6', action='store_true', default=False,
+                        help='only output ipv6 entries')
+
+    args = parser.parse_args(arguments)
+
+    if args.ipv4 and args.ipv6:
+        parser.error('ipv4 and ipv6 options are mutually exclusive')
+
+    return args
 
 
 def main(arguments=None):
@@ -85,6 +95,10 @@ def main(arguments=None):
             topology = Topology(args.zone, subzone['vrf'], subzone['network'],
                                 subzone['topology'], loader=topo_loader,
                                 params=subzone.get('params'))
+
+            if ((args.ipv4 is True and topology.ipversion != 4) or
+                (args.ipv6 is True and topology.ipversion != 6)):
+                    continue
 
             if args.dump_topology is True:
                 print('# topology: {0}\n'.format(subzone['topology']))
