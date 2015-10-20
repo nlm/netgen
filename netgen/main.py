@@ -21,6 +21,8 @@ def parse_arguments(arguments):
                         required=True, help='name of the zone to generate')
     parser.add_argument('--vrf', '-v',  metavar='VRF', type=str, default=None,
                         help='vrf to output (default: all)')
+    parser.add_argument('--network', '-n',  metavar='NETWORK', type=str, default=None,
+                        help='network to output (default: all)')
 #    parser.add_argument('--free', '-f', action='store_true', default=False,
 #                        help='output free networks')
     parser.add_argument('--without-hosts', '-H', action='store_true',
@@ -89,6 +91,9 @@ def main(arguments=None):
 
     for subzone in zones[args.zone]:
         if args.vrf and subzone['vrf'] != args.vrf:
+            continue
+
+        if args.network and subzone['network'] != args.network:
             continue
 
         try:
