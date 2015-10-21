@@ -77,7 +77,7 @@ class Topology(object):
                 vrf=self.vrf,
                 network=self.network,
                 params=self.params,
-                ipversion=self.ipversion)
+                ipv=self.ipversion)
         return self._rendered
 
 
@@ -376,7 +376,7 @@ class NetworkGenerator(object):
         add_custom_functions(env)
         template = env.get_template('{0}.tpl'.format(template))
         return template.render(zones=self.zones,
-                               ipversion=self.ipversion,
+                               ipv=self.ipversion,
                                with_hosts=with_hosts)
 
 
