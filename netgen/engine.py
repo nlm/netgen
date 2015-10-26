@@ -243,7 +243,12 @@ class Zone(object):
         if prefixlen == 0:
             if name == '_':
                 return None
-            raise ConfigError('zero-sized subnets must be named "_"')
+            elif align is not None:
+                subnet = self.Subnet(name, u(str(network)), vlan, mtu)
+                self.subnets.append(subnet)
+                return subnet
+            else:
+                raise ConfigError('zero-sized subnets must be named "_"')
 
         # looking for next subnet address
         try:
