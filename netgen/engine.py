@@ -143,7 +143,7 @@ class Subnet(object):
             print('warning: fixed {0} -> {1}'.format(network, self.network),
                   file=sys.stderr)
 
-    def nextip(self, prefixlen):
+    def get_next_ip(self, prefixlen):
         if not self.net_min_prefixlen < prefixlen < self.net_max_prefixlen:
             raise ConfigError('invalid padding prefixlen: {0}'
                               .format(prefixlen))
@@ -173,7 +173,7 @@ class Subnet(object):
             return None
         match = re.match(r'^_/(\d+)$', name)
         if match:
-            self.cur_addr = self.nextip(int(match.group(1)))
+            self.cur_addr = self.get_next_ip(int(match.group(1)))
             return None
 
         host = self.Host(name, addr)
@@ -206,6 +206,11 @@ class IPv6Subnet(Subnet):
 
 
 class Zone(object):
+    """
+    Object representing a Zone
+    A Zone is associated to a VRF and contains subnets
+    derived from a network address
+    """
 
     def __init__(self, name, network, vrf=None, showfree=False):
         self.name = name
@@ -218,8 +223,14 @@ class Zone(object):
         self.cur_addr = self.network.network_address
         self.subnets = []
 
-    def get_next_network(self, prefixlen):
+    def get_next_subnet(self, prefixlen):
         """
+        Calculates the next subnet address according to the prefixlen
+
+        args:
+            prefixlen: prefix length of the subnet
+        returns:
+            a Network object
         """
         try:
             network = self.Network('{0}/{1}'.format(self.cur_addr, prefixlen),
@@ -249,7 +260,7 @@ class Zone(object):
 
         # align if asked
         if align is not None:
-            network = self.get_next_network(align)
+            network = self.get_next_subnet(align)
             self.cur_addr = network.network_address
 
         # if prefixlen is 0, subnet is shadow
@@ -257,7 +268,7 @@ class Zone(object):
             if name == '_':
                 return None
             elif align is not None:
-                network = self.get_next_network(align)
+                network = self.get_next_subnet(align)
                 subnet = self.Subnet(name, u(str(network)), vlan, mtu, shadow=True)
                 self.subnets.append(subnet)
                 return subnet
@@ -265,7 +276,7 @@ class Zone(object):
                 raise ConfigError('zero-sized subnets must be named "_"')
 
         # looking for next subnet address
-        network = self.get_next_network(prefixlen)
+        network = self.get_next_subnet(prefixlen)
 
         # checking is subnet fits
         if (network.network_address < self.network.network_address or
