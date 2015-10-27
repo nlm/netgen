@@ -214,6 +214,20 @@ class Zone(object):
         self.cur_addr = self.network.network_address
         self.subnets = []
 
+    def get_next_network(self, prefixlen):
+        """
+        """
+        try:
+            network = self.Network('{0}/{1}'.format(self.cur_addr, prefixlen),
+                                   strict=True)
+        except ValueError:
+            net1 = self.Network('{0}/{1}'.format(self.cur_addr, prefixlen),
+                                strict=False)
+            network = self.Network('{0}/{1}'.format(net1.network_address +
+                                                    net1.num_addresses,
+                                                    net1.prefixlen))
+        return network
+
     def add_subnet(self, name, prefixlen, vlan=None, align=None, mtu=None):
         """
         Adds a subnet to this zone
@@ -231,19 +245,15 @@ class Zone(object):
 
         # align if asked
         if align is not None:
-            try:
-                network = self.Network('{0}/{1}'.format(self.cur_addr, align),
-                                       strict=True)
-            except ValueError:
-                network = self.Network('{0}/{1}'.format(self.cur_addr, align),
-                                       strict=False)
-                self.cur_addr = network.network_address + network.num_addresses
+            network = self.get_next_network(align)
+            self.cur_addr = network.network_address
 
         # if prefixlen is 0, subnet is shadow
         if prefixlen == 0:
             if name == '_':
                 return None
             elif align is not None:
+                network = self.get_next_network(align)
                 subnet = self.Subnet(name, u(str(network)), vlan, mtu)
                 self.subnets.append(subnet)
                 return subnet
@@ -251,15 +261,7 @@ class Zone(object):
                 raise ConfigError('zero-sized subnets must be named "_"')
 
         # looking for next subnet address
-        try:
-            network = self.Network('{0}/{1}'.format(self.cur_addr, prefixlen),
-                                   strict=True)
-        except ValueError:
-            net1 = self.Network('{0}/{1}'.format(self.cur_addr, prefixlen),
-                               strict=False)
-            addr = net1.network_address
-            net2 = '{0}/{1}'.format(addr + net1.num_addresses, net1.prefixlen)
-            network = self.Network(net2)
+        network = self.get_next_network(prefixlen)
 
         # checking is subnet fits
         if (network.network_address < self.network.network_address or
