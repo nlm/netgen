@@ -114,7 +114,7 @@ class Subnet(object):
     """
     Object representing a Subnet
     """
-    def __init__(self, name, network, vlan=None, mtu=None):
+    def __init__(self, name, network, vlan=None, mtu=None, shadow=False):
         """
         Subnet object initialization
 
@@ -127,6 +127,7 @@ class Subnet(object):
         self.hosts = []
         self.vlan = vlan
         self.mtu = mtu
+        self.shadow = shadow
         self.network = self.Network(network, strict=False)
 
         if self.network.prefixlen >= self.net_max_prefixlen - 1:
@@ -160,6 +161,9 @@ class Subnet(object):
         returns:
             the created Host object
         """
+        if self.shadow is True:
+            raise ConfigError('cannot add host "{0}" to zero-sized subnet "{1}"'
+                              .format(name, self.name))
         addr = self.cur_addr
         if addr not in self.network or addr > self.max_addr:
             raise NetworkFull
@@ -254,7 +258,7 @@ class Zone(object):
                 return None
             elif align is not None:
                 network = self.get_next_network(align)
-                subnet = self.Subnet(name, u(str(network)), vlan, mtu)
+                subnet = self.Subnet(name, u(str(network)), vlan, mtu, shadow=True)
                 self.subnets.append(subnet)
                 return subnet
             else:
