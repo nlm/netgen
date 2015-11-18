@@ -1,13 +1,30 @@
-rz0:
-  - vrf: 'adm'
-    topology: 'rz-adm'
-    network: '172.16.240.0/20'
-    properties:
-      basevlan: 0
-  - vrf: 'pub'
-    topology: 'rz-pub'
-    network: '192.168.0.0/24'
-az10:
-  - vrf: 'adm'
-    topology: 'az'
-    network: '172.16.0.0/20'
+# This is the main config file, used to describe zones
+zone0:
+  - network: '192.0.2.0/24'
+    topology: 'basic'
+    vrf: 'vrf0'
+  - network: '198.51.100.0/24'
+    topology: 'withparams'
+    vrf: 'vrf0'
+    params:
+      # same params are passed to both topology template
+      # and output templates
+      # these are used in the topology template
+      subnet_count: 5
+      hosts_count: 5
+      # these are used in the output template
+      dns_domain: '.example.com.'
+    # you can also generate ipv6 networks (auto-detected)
+  - network: '2001:db8::/32'
+    # you can reuse the same toplology for ipv4 and ipv6
+    # see inside template for more info
+    topology: 'withparams'
+    vrf: 'vrf0'
+    params:
+      # same params are passed to both topology template
+      # and output templates
+      # these are used in the topology template
+      subnet_count: 5
+      host_count: 5
+      # these are used in the output template
+      dns_domain: '.example.com.'
