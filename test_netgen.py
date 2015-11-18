@@ -15,6 +15,18 @@ class IPv4Host(unittest.TestCase):
         self.assertEqual(str(self.host.address), '192.168.2.34')
 
 
+class IPv6Host(unittest.TestCase):
+
+    def setUp(self):
+        self.host = netgen.IPv6Host('testhost', '2001:c001::1')
+
+    def test_host_name(self):
+        self.assertEqual(self.host.name, 'testhost')
+
+    def test_host_address(self):
+        self.assertEqual(str(self.host.address), '2001:c001::1')
+
+
 class SimpleIPv4Subnet(unittest.TestCase):
 
     def setUp(self):

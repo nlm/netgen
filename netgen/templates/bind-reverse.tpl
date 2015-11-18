@@ -1,10 +1,10 @@
+{%- set dns_domain = params.get('dns_domain', '') %}
 {%- for zone in zones -%}
 ; Zone {{ zone.name }} vrf {{ zone.vrf }}
-@ IN SOA ( FIXME )
 {%- for subnet in zone.subnets %}
-; Subnet {{ zone.name }}{{ subnet.name }}
+; Subnet {{ subnet.name }}
 {%- for host in subnet.hosts %}
-{{ host.name }} IN A {{ host.address }}
+{{ host.address.reverse_pointer }}. IN PTR {{ host.name }}{{ dns_domain }}
 {%- endfor %}
 {%- endfor %}
 {%- endfor %}

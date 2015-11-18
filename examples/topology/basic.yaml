@@ -1,0 +1,15 @@
+{# Basic Template example #}
+# Template is passing through jinja2 then yaml
+# so you can use all kinds of comments
+zone: '{{ zone }}'
+network: '{{ network }}'
+vrf: '{{ vrf }}'
+subnets:
+{% for subnet_i in range(5) %}
+  - name: '{{ zone }}-subnet{{ subnet_i }}'
+    size: 27
+    hosts:
+      {% for host_i in range(10) %}
+      - '{{ zone }}-subnet{{ subnet_i }}-host{{ host_i }}'
+      {% endfor %}
+{% endfor %}
