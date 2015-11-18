@@ -9,6 +9,7 @@ from voluptuous import Schema, MultipleInvalid, Optional, Required, Extra, Any
 from ipaddress import IPv4Network, IPv6Network
 from jinja2 import FileSystemLoader
 from jinja2.exceptions import TemplateNotFound
+from pkg_resources import resource_filename
 from .engine import IPv4NetworkGenerator, IPv6NetworkGenerator, Topology
 from .exception import NetworkFull, ConfigError, UnalignedSubnet
 
@@ -44,6 +45,17 @@ def parse_arguments(arguments):
 
     return args
 
+def main_profile(arguments=None):
+    import cProfile, pstats, StringIO
+    pr = cProfile.Profile()
+    pr.enable()
+    main(arguments)
+    pr.disable()
+    s = StringIO.StringIO()
+    sortby = 'tottime'
+    ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+    ps.print_stats()
+    print(s.getvalue())
 
 def main(arguments=None):
 
@@ -64,12 +76,17 @@ def main(arguments=None):
     data_dir = args.data
     zones_file = '{0}/zones.yaml'.format(data_dir)
     topology_dir = '{0}/topology'.format(data_dir)
-    output_dir = '{0}/output'.format(data_dir)
+
+    output_dirs = []
+    local_output_dir = '{0}/output'.format(data_dir)
+    if os.path.isdir(local_output_dir):
+        output_dirs.append(local_output_dir)
+    output_dirs.append(resource_filename(__name__, 'templates'))
 
     if not os.path.isfile(zones_file):
         sys.exit('file not found: {0}'.format(zones_file))
 
-    for directory in [data_dir, topology_dir, output_dir]:
+    for directory in [data_dir, topology_dir]:
         if not os.path.isdir(directory):
             sys.exit('directory not found: {0}'.format(directory))
 
@@ -87,7 +104,7 @@ def main(arguments=None):
         sys.exit('zone "{0}" does not exists'.format(args.zone))
 
     topo_loader = FileSystemLoader(topology_dir)
-    output_loader = FileSystemLoader(output_dir)
+    output_loader = FileSystemLoader(output_dirs)
 
     for subzone in zones[args.zone]:
         if args.vrf and subzone['vrf'] != args.vrf:
@@ -132,3 +149,6 @@ def main(arguments=None):
             sys.exit('config error: {0}'.format(exception))
         except UnalignedSubnet as exception:
             sys.exit('unaligned subnet: {0}'.format(exception))
+
+if __name__ == '__main__':
+    main()
