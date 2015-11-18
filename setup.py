@@ -2,7 +2,7 @@ from setuptools import setup,find_packages
 
 setup(
     name = "netgen",
-    version = "0.4b4",
+    version = "0.4b5",
     packages = ['netgen'],
     author = "Nicolas Limage",
     description = "a templated ip address plan generator",
@@ -27,9 +27,13 @@ setup(
     ],
     entry_points = {
         'console_scripts': [
-            'network-generator = netgen.main:main',
-            'netgen = netgen.main:main',
+            'network-generator = netgen.__main__:main',
+            'netgen = netgen.__main__:main',
         ],
+    },
+    include_package_data = True,
+    package_data = {
+        'supgen': ['templates/*'],
     },
     test_suite = 'test_netgen',
 )
