@@ -1,5 +1,7 @@
 # This is the main config file, used to describe zones
 zone0:
+  # each of these blocks is a supernetwork, and will be
+  # divided in subnetworks by netgen according to template
   - network: '192.0.2.0/24'
     topology: 'basic'
     vrf: 'vrf0'
@@ -17,7 +19,8 @@ zone0:
     # you can also generate ipv6 networks (auto-detected)
   - network: '2001:db8::/32'
     # you can reuse the same toplology for ipv4 and ipv6
-    # see inside template for more info
+    # see inside template for more info on how to make a
+    # template suitable for both
     topology: 'withparams'
     vrf: 'vrf0'
     params:
