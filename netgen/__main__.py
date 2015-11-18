@@ -116,7 +116,7 @@ def main(arguments=None):
         try:
             topology = Topology(args.zone, subzone['vrf'], subzone['network'],
                                 subzone['topology'], loader=topo_loader,
-                                params=subzone.get('params'))
+                                params=subzone.get('params', {}))
 
             if ((args.ipv4 is True and topology.ipversion != 4) or
                 (args.ipv6 is True and topology.ipversion != 6)):
@@ -136,7 +136,8 @@ def main(arguments=None):
                                    showfree=False)
                   .render(args.output_template,
                           output_loader,
-                          not args.without_hosts)
+                          not args.without_hosts,
+                          params=subzone.get('params', {}))
                   .encode('utf-8'))
 
         except MultipleInvalid as exception:
