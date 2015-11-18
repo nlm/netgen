@@ -5,6 +5,7 @@ setup(
     version = "0.4b5",
     packages = ['netgen'],
     author = "Nicolas Limage",
+    author_email = 'github@xephon.org',
     description = "a templated ip address plan generator",
     license = "GPL",
     keywords = "ip range network space",
