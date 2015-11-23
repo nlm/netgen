@@ -2,7 +2,7 @@ from setuptools import setup,find_packages
 
 setup(
     name = "netgen",
-    version = "0.4b5",
+    version = "0.4b6",
     packages = ['netgen'],
     author = "Nicolas Limage",
     author_email = 'github@xephon.org',
@@ -34,7 +34,7 @@ setup(
     },
     include_package_data = True,
     package_data = {
-        'supgen': ['templates/*'],
+        'netgen': ['templates/*.tpl'],
     },
     test_suite = 'test_netgen',
 )
