@@ -149,6 +149,9 @@ def main(arguments=None):
             sys.exit('config error: {0}'.format(exception))
         except UnalignedSubnet as exception:
             sys.exit('unaligned subnet: {0}'.format(exception))
+        except IOError as exception:
+            sys.exit('io error: {0}'.format(exception))
+
 
 if __name__ == '__main__':
     main()
