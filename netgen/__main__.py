@@ -137,8 +137,7 @@ def main(arguments=None):
                   .render(args.output_template,
                           output_loader,
                           not args.without_hosts,
-                          params=subzone.get('params', {}))
-                  .encode('utf-8'))
+                          params=subzone.get('params', {})))
 
         except MultipleInvalid as exception:
             sys.exit('error parsing topology: {0}'.format(exception))
