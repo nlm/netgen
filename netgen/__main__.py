@@ -94,7 +94,7 @@ def main(arguments=None):
 
     try:
         with open(zones_file, 'r') as zones_fd:
-            zones = schema(yaml.load(zones_fd))
+            zones = schema(yaml.safe_load(zones_fd))
     except MultipleInvalid as exception:
         sys.exit('error parsing zone file: {0}'.format(exception))
     except Exception as exception:

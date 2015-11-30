@@ -67,7 +67,7 @@ class Topology(object):
     @property
     def data(self):
         if self._data is None:
-            self._data = yaml.load(str(self))
+            self._data = yaml.safe_load(str(self))
         return self._data
 
     def __str__(self):
