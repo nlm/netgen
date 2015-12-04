@@ -1,6 +1,7 @@
 {%- for zone in zones %}
 - "zone": "{{ "%s"|format(zone.name) }}"
   "vrf": "{{ "%s"|format(zone.vrf) }}"
+  "network": "{{ "%s"|format(zone.network) }}"
   "ipv": {{ "%d"|format(ipv) }}
   {%- if zone.subnets %}
   "subnets":
