@@ -2,6 +2,8 @@
 - "zone": "{{ "%s"|format(zone.name) }}"
   "vrf": "{{ "%s"|format(zone.vrf) }}"
   "network": "{{ "%s"|format(zone.network) }}"
+  "address": "{{ "%s"|format(zone.network.network_address) }}"
+  "prefixlen": {{ "%d"|format(zone.network.prefixlen) }}
   "ipv": {{ "%d"|format(ipv) }}
   {%- if zone.subnets %}
   "subnets":
