@@ -17,7 +17,7 @@ def parse_arguments(arguments):
 
     parser = argparse.ArgumentParser(description='generate ip address plan')
     parser.add_argument('--data', '-d', metavar='DIR', type=str,
-                        default='.', help='the data directory (default: .)')
+                        help='the data directory (default: .)')
     parser.add_argument('--zone', '-z', metavar='ZONE', type=str,
                         required=True, help='name of the zone to generate')
     parser.add_argument('--vrf', '-v',  metavar='VRF', type=str, default=None,
@@ -73,7 +73,10 @@ def main(arguments=None):
 
     # Check for required files and directories
 
-    data_dir = args.data
+    if args.data is not None:
+        data_dir = args.data
+    else:
+        data_dir = os.environ.get('NETGEN_DATA_DIR', '.')
     zones_file = '{0}/zones.yaml'.format(data_dir)
     topology_dir = '{0}/topology'.format(data_dir)
 
