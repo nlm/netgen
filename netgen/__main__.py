@@ -143,10 +143,9 @@ def main(arguments=None):
                 NetworkGenerator = IPv6NetworkGenerator
 
             print(NetworkGenerator(topology,
-                                   showfree=False)
+                                   with_hosts=not args.without_hosts)
                   .render(args.output_template,
                           output_loader,
-                          not args.without_hosts,
                           params=subzone.get('params', {})))
 
         except MultipleInvalid as exception:

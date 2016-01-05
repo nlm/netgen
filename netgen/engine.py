@@ -212,14 +212,13 @@ class Zone(object):
     derived from a network address
     """
 
-    def __init__(self, name, network, vrf=None, showfree=False):
+    def __init__(self, name, network, vrf=None):
         self.name = name
         self.network = self.Network(u(str(network)), strict=False)
         if network != str(self.network):
             print('warning: fixed {0} -> {1}'.format(network, self.network),
                   file=sys.stderr)
         self.vrf = vrf
-        self.showfree = showfree
         self.cur_addr = self.network.network_address
         self.subnets = []
 
@@ -292,7 +291,7 @@ class Zone(object):
         # shifting current address
         self.cur_addr = network.network_address + network.num_addresses
 
-        if name == '_' and not self.showfree:
+        if name == '_':
             return None
 
         # adding the subnet object
@@ -337,9 +336,9 @@ class NetworkGenerator(object):
         }]
     })
 
-    def __init__(self, data, showfree=False):
-        self.showfree = showfree
+    def __init__(self, data, with_hosts=True):
         self.zones = []
+        self.with_hosts = with_hosts
         if isinstance(data, Topology):
             self.parse(data.data)
         else:
@@ -348,8 +347,7 @@ class NetworkGenerator(object):
     def parse(self, data):
         data = self.topology_schema(data)
 
-        zone = self.add_zone(data['zone'], data['network'], data['vrf'],
-                             showfree=self.showfree)
+        zone = self.add_zone(data['zone'], data['network'], data['vrf'])
 
         for elt in data.get('subnets', []):
             try:
@@ -357,13 +355,14 @@ class NetworkGenerator(object):
                                          vlan=elt.get('vlan'),
                                          align=elt.get('align'),
                                          mtu=elt.get('mtu'))
-                # catch UnalignedSubnet here for padding
-                # fill for addfreesubnets
             except NetworkFull:
                 raise NetworkFull('network full while adding subnet "{0}" '
                                   'to network {1} of zone "{2}"'
                                   .format(elt['name'], data['network'],
                                           data['zone']))
+
+            if not self.with_hosts:
+                continue
 
             for hostname in elt.get('hosts', []):
                 try:
@@ -375,31 +374,18 @@ class NetworkGenerator(object):
                                       .format(hostname, elt['name'],
                                               data['network'], data['zone']))
 
-        # fill the rest of the zone with empty networks
-#        if self.showfree:
-#            while zone.cur_addr < zone.network.broadcast_address:
-#                for size in range(zone.network.prefixlen, 32):
-#                    try:
-#                        zone.add_subnet('_', size, 0, None, None)
-#                        break
-#                    except NetworkFull:
-#                        pass
-#                    except UnalignedSubnet:
-#                        pass
-
-    def add_zone(self, name, network, vrf=None, showfree=False):
-        zone = self.Zone(name, network, vrf, showfree=showfree)
+    def add_zone(self, name, network, vrf=None):
+        zone = self.Zone(name, network, vrf)
         self.zones.append(zone)
         return zone
 
-    def render(self, template, loader, with_hosts=True, params=None):
+    def render(self, template, loader, params=None):
         env = Environment(loader=loader, extensions=['jinja2.ext.do'])
         add_custom_filters(env)
         add_custom_functions(env)
         template = env.get_template('{0}.tpl'.format(template))
         return template.render(zones=self.zones,
                                ipv=self.ipversion,
-                               with_hosts=with_hosts,
                                params=(params or {}))
 
 
