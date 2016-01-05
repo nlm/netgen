@@ -20,28 +20,32 @@ def parse_arguments(arguments):
                         help='the data directory (default: .)')
     parser.add_argument('--zone', '-z', metavar='ZONE', type=str,
                         required=True, help='name of the zone to generate')
-    parser.add_argument('--vrf', '-v',  metavar='VRF', type=str, default=None,
-                        help='vrf to output (default: all)')
-    parser.add_argument('--network', '-n',  metavar='NETWORK', type=str, default=None,
-                        help='network to output (default: all)')
-#    parser.add_argument('--free', '-f', action='store_true', default=False,
-#                        help='output free networks')
     parser.add_argument('--without-hosts', '-H', action='store_true',
                         default=False, help='hide hosts')
     parser.add_argument('--output-template', '-o', metavar='TEMPLATE',
                         type=str, default='netgen',
-                        help='output template to use')
+                        help='output template to use for rendering')
     parser.add_argument('--dump-topology', action='store_true', default=False,
-                        help='dump the rendered topology instead')
-    parser.add_argument('--ipv4', '-4', action='store_true', default=False,
-                        help='only output ipv4 entries')
-    parser.add_argument('--ipv6', '-6', action='store_true', default=False,
-                        help='only output ipv6 entries')
+                        help=('dump the intermediate topology'
+                              ' instead of regular output'))
+
+    filters = parser.add_argument_group('filters')
+
+    filters.add_argument('--vrf', '-v',  metavar='VRF', type=str, default=None,
+                        help='only output zones in this vrf (default: all)')
+    filters.add_argument('--network', '-n',  metavar='NETWORK', type=str, default=None,
+                        help='only output zones using this network (default: all)')
+    filters.add_argument('--topology', '-t',  metavar='TOPOLOGY', type=str, default=None,
+                        help='only output zones using this template (default: all)')
+
+    ipv_group = filters.add_mutually_exclusive_group()
+
+    ipv_group.add_argument('--ipv4', '-4', action='store_true', default=False,
+                           help='only output ipv4 entries')
+    ipv_group.add_argument('--ipv6', '-6', action='store_true', default=False,
+                           help='only output ipv6 entries')
 
     args = parser.parse_args(arguments)
-
-    if args.ipv4 and args.ipv6:
-        parser.error('ipv4 and ipv6 options are mutually exclusive')
 
     return args
 
@@ -114,6 +118,9 @@ def main(arguments=None):
             continue
 
         if args.network and subzone['network'] != args.network:
+            continue
+
+        if args.topology and subzone['topology'] != args.topology:
             continue
 
         try:
