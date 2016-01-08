@@ -59,7 +59,9 @@ def main(arguments=None):
         str: [{
             Required('vrf'): str,
             Required('topology'): str,
-            Required('network'): Any(lambda x: str(IPv4Network(u(x))),
+            Required('network'): Any([Any(lambda x: str(IPv4Network(u(x))),
+                                           lambda x: str(IPv6Network(u(x))))],
+                                     lambda x: str(IPv4Network(u(x))),
                                      lambda x: str(IPv6Network(u(x)))),
             Optional('params'): {Extra: object},
         }]
@@ -107,53 +109,59 @@ def main(arguments=None):
     topo_loader = FileSystemLoader(topology_dir)
     output_loader = FileSystemLoader(output_dirs)
 
+    def flatten(l):
+        return [item for y in l for item in (y if type(y) == list or
+                                             type(y) == tuple else [y])]
+
     for subzone in zones[args.zone]:
-        if args.vrf and subzone['vrf'] != args.vrf:
-            continue
-
-        if args.network and subzone['network'] != args.network:
-            continue
-
-        if args.topology and subzone['topology'] != args.topology:
-            continue
-
-        try:
-            topology = Topology(args.zone, subzone['vrf'], subzone['network'],
-                                subzone['topology'], loader=topo_loader,
-                                params=subzone.get('params', {}))
-
-            if ((args.ipv4 is True and topology.ipversion != 4) or
-                (args.ipv6 is True and topology.ipversion != 6)):
-                    continue
-
-            if args.dump_topology is True:
-                print('# topology: {0}\n'.format(subzone['topology']))
-                print(topology)
+        for network in flatten([subzone['network']]):
+            if args.vrf and subzone['vrf'] != args.vrf:
                 continue
 
-            if topology.ipversion == 4:
-                NetworkGenerator = IPv4NetworkGenerator
-            elif topology.ipversion == 6:
-                NetworkGenerator = IPv6NetworkGenerator
+            if args.network and network != args.network:
+                continue
 
-            print(NetworkGenerator(topology,
-                                   with_hosts=not args.without_hosts)
-                  .render(args.output_template,
-                          output_loader,
-                          params=subzone.get('params', {})))
+            if args.topology and subzone['topology'] != args.topology:
+                continue
 
-        except MultipleInvalid as exception:
-            sys.exit('error parsing topology: {0}'.format(exception))
-        except TemplateNotFound as exception:
-            sys.exit('template not found: {0}'.format(exception))
-        except NetworkFull as exception:
-            sys.exit('network full: {0}'.format(exception))
-        except ConfigError as exception:
-            sys.exit('config error: {0}'.format(exception))
-        except UnalignedSubnet as exception:
-            sys.exit('unaligned subnet: {0}'.format(exception))
-        except IOError as exception:
-            sys.exit('io error: {0}'.format(exception))
+            try:
+                topology = Topology(args.zone, subzone['vrf'],
+                                    network, subzone['topology'],
+                                    loader=topo_loader,
+                                    params=subzone.get('params', {}))
+
+                if ((args.ipv4 is True and topology.ipversion != 4) or
+                    (args.ipv6 is True and topology.ipversion != 6)):
+                        continue
+
+                if args.dump_topology is True:
+                    print('# topology: {0}\n'.format(subzone['topology']))
+                    print(topology)
+                    continue
+
+                if topology.ipversion == 4:
+                    NetworkGenerator = IPv4NetworkGenerator
+                elif topology.ipversion == 6:
+                    NetworkGenerator = IPv6NetworkGenerator
+
+                print(NetworkGenerator(topology,
+                                       with_hosts=not args.without_hosts)
+                      .render(args.output_template,
+                              output_loader,
+                              params=subzone.get('params', {})))
+
+            except MultipleInvalid as exception:
+                sys.exit('error parsing topology: {0}'.format(exception))
+            except TemplateNotFound as exception:
+                sys.exit('template not found: {0}'.format(exception))
+            except NetworkFull as exception:
+                sys.exit('network full: {0}'.format(exception))
+            except ConfigError as exception:
+                sys.exit('config error: {0}'.format(exception))
+            except UnalignedSubnet as exception:
+                sys.exit('unaligned subnet: {0}'.format(exception))
+            except IOError as exception:
+                sys.exit('io error: {0}'.format(exception))
 
 
 if __name__ == '__main__':
