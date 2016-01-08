@@ -51,18 +51,6 @@ def parse_arguments(arguments):
 
     return args
 
-def main_profile(arguments=None):
-    import cProfile, pstats, StringIO
-    pr = cProfile.Profile()
-    pr.enable()
-    main(arguments)
-    pr.disable()
-    s = StringIO.StringIO()
-    sortby = 'tottime'
-    ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-    ps.print_stats()
-    print(s.getvalue())
-
 def main(arguments=None):
 
     args = parse_arguments(arguments)
