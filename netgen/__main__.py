@@ -28,6 +28,8 @@ def parse_arguments(arguments):
     parser.add_argument('--dump-topology', action='store_true', default=False,
                         help=('dump the intermediate topology'
                               ' instead of regular output'))
+    parser.add_argument('--debug', action='store_true', default=False,
+                        help='don\'t catch exceptions')
 
     filters = parser.add_argument_group('filters')
 
@@ -103,8 +105,12 @@ def main(arguments=None):
         with open(zones_file, 'r') as zones_fd:
             zones = schema(yaml.safe_load(zones_fd))
     except MultipleInvalid as exception:
+        if args.debug:
+            raise
         sys.exit('error parsing zone file: {0}'.format(exception))
     except Exception as exception:
+        if args.debug:
+            raise
         sys.exit('error: {0}'.format(exception))
 
     if args.zone not in zones:
