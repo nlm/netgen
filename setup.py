@@ -2,7 +2,7 @@ from setuptools import setup,find_packages
 
 setup(
     name = "netgen",
-    version = "0.4b8",
+    version = "0.4b9",
     packages = ['netgen'],
     author = "Nicolas Limage",
     author_email = 'github@xephon.org',
@@ -30,6 +30,7 @@ setup(
         'console_scripts': [
             'network-generator = netgen.__main__:main',
             'netgen = netgen.__main__:main',
+            'netgen-free = netgen.freespace:main',
         ],
     },
     include_package_data = True,
