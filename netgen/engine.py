@@ -143,9 +143,11 @@ class Subnet(object):
             print('warning: fixed {0} -> {1}'.format(network, self.network),
                   file=sys.stderr)
 
-        if self.ip_version == 6 and 127 > self.network.prefixlen > 64:
+        if (self.ip_version == 6 and not shadow
+            and 127 > self.network.prefixlen > 64):
             print('warning: use of ipv6 prefix length '
-                  'larger than 64 is discouraged (except 127,128)',
+                  'larger than 64 ({0}: {1}) is discouraged '
+                  '(except 127,128)'.format(name, self.network.prefixlen),
                   file=sys.stderr)
 
     def get_next_ip(self, prefixlen):
