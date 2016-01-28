@@ -8,50 +8,64 @@ from ipaddress import IPv6Network, IPv6Address
 from ipaddress import AddressValueError
 from jinja2 import Environment, FileSystemLoader
 from voluptuous import Schema, Match, Required, Optional, MultipleInvalid, Any
+from math import log, ceil
 
 from .exception import NetworkFull, ConfigError, UnalignedSubnet, ParameterError
 
+class TemplateUtils(object):
 
-def dot_reverse(value):
-    return ".".join(reversed(str(value).split(".")))
+    @staticmethod
+    def filter_dot_reverse(value):
+        return ".".join(reversed(str(value).split(".")))
 
+    @classmethod
+    def ip46(cls, ipv):
+        return lambda valuev4, valuev6: cls.ipver(ipv, valuev4, valuev6)
 
-def ipver(ipversion, valuev4, valuev6):
-    if ipversion == 4:
-        return valuev4
-    elif ipversion == 6:
-        return valuev6
-    else:
-        raise ParameterError('invalid value for ipversion: {0}'
-                             .format(ipversion))
+    @staticmethod
+    def ipver(ipversion, valuev4, valuev6):
+        if ipversion == 4:
+            return valuev4
+        elif ipversion == 6:
+            return valuev6
+        else:
+            raise ParameterError('invalid value for ipversion: {0}'
+                                 .format(ipversion))
+
+    @staticmethod
+    def minpref(ipversion):
+        def minpref2(host_count):
+            if ipversion == 4:
+                return 32 - int(ceil(log(host_count, 2)))
+            elif ipversion == 6:
+                return min(64, 128 - int(ceil(log(host_count, 2))))
+            else:
+                raise ParameterError('invalid value for ipversion: {0}'
+                                     .format(ipversion))
+        return minpref2
 
 
 def add_custom_filters(environment):
-    environment.filters['dotreverse'] = dot_reverse
+    environment.filters['dotreverse'] = TemplateUtils.filter_dot_reverse
 
 
-def add_custom_functions(environment):
-    environment.globals['ipv46'] = ipver
+def add_custom_globals(environment, ipversion):
+    environment.globals['ipv46'] = TemplateUtils.ipver
+    environment.globals['ip46'] = TemplateUtils.ip46(ipversion)
+    environment.globals['minpref'] = TemplateUtils.minpref(ipversion)
+    import math
+    math.int = int
+    math.float = float
+    math.round = round
+    math.min = min
+    math.max = max
+    environment.globals['math'] = math
 
 
 class Topology(object):
 
     def __init__(self, zone, vrf, network, template,
                  params=None, loader=None):
-        if loader is None:
-            loader = FileSystemLoader('templates')
-        env = Environment(loader=loader,
-                          extensions=['jinja2.ext.do',
-                                      'jinja2.ext.loopcontrols'])
-        add_custom_filters(env)
-        add_custom_functions(env)
-        self.template = env.get_template('{0}.yaml'.format(template))
-        self.zone = zone
-        self.vrf = vrf
-        self.params = 0
-        self.params = params if params is not None else {}
-        self._rendered = None
-        self._data = None
 
         try:
             self.network = IPv4Network(u(str(network)))
@@ -62,6 +76,21 @@ class Topology(object):
                 self.ipversion = 6
             except AddressValueError:
                 raise ConfigError('invalid network: {}'.format(str(network)))
+
+        if loader is None:
+            loader = FileSystemLoader('templates')
+        env = Environment(loader=loader,
+                          extensions=['jinja2.ext.do',
+                                      'jinja2.ext.loopcontrols'])
+        add_custom_filters(env)
+        add_custom_globals(env, self.ipversion)
+        self.template = env.get_template('{0}.yaml'.format(template))
+        self.zone = zone
+        self.vrf = vrf
+        self.params = 0
+        self.params = params if params is not None else {}
+        self._rendered = None
+        self._data = None
 
 
     @property
@@ -264,7 +293,8 @@ class Zone(object):
         """
         if not self.net_min_prefixlen <= prefixlen <= self.net_max_prefixlen:
             raise ConfigError('subnet size must be between {0} and {1}'
-                              .format(self.net_min_prefixlen, self.net_max_prefixlen))
+                              .format(self.net_min_prefixlen,
+                                      self.net_max_prefixlen))
 
         # align if asked
         if align is not None:
@@ -277,7 +307,8 @@ class Zone(object):
                 return None
             elif align is not None:
                 network = self.get_next_subnet(align)
-                subnet = self.Subnet(name, u(str(network)), vlan, mtu, shadow=True)
+                subnet = self.Subnet(name, u(str(network)), vlan,
+                                     mtu, shadow=True)
                 self.subnets.append(subnet)
                 return subnet
             else:
@@ -391,7 +422,7 @@ class NetworkGenerator(object):
     def render(self, template, loader, params=None):
         env = Environment(loader=loader, extensions=['jinja2.ext.do'])
         add_custom_filters(env)
-        add_custom_functions(env)
+        add_custom_globals(env, self.ipversion)
         template = env.get_template('{0}.tpl'.format(template))
         return template.render(zones=self.zones,
                                ipv=self.ipversion,
