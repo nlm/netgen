@@ -19,6 +19,7 @@ def parse_arguments(arguments):
     parser.add_argument('--data', '-d', metavar='DIR', type=str,
                         help='the data directory (default: .)')
     parser.add_argument('--zone', '-z', metavar='ZONE', type=str,
+                        action='append',
                         required=True, help='name of the zone to generate')
     parser.add_argument('--without-hosts', '-H', action='store_true',
                         default=False, help='hide hosts')
@@ -34,10 +35,13 @@ def parse_arguments(arguments):
     filters = parser.add_argument_group('filters')
 
     filters.add_argument('--vrf', '-v',  metavar='VRF', type=str, default=None,
+                        action='append',
                         help='only output zones in this vrf (default: all)')
     filters.add_argument('--network', '-n',  metavar='NETWORK', type=str, default=None,
+                        action='append',
                         help='only output zones using this network (default: all)')
     filters.add_argument('--topology', '-t',  metavar='TOPOLOGY', type=str, default=None,
+                        action='append',
                         help='only output zones using this template (default: all)')
 
     ipv_group = filters.add_mutually_exclusive_group()
@@ -103,8 +107,9 @@ def main(arguments=None):
             raise
         sys.exit('error: {0}'.format(exception))
 
-    if args.zone not in zones:
-        sys.exit('zone "{0}" does not exists'.format(args.zone))
+    for zone in args.zone:
+        if zone not in zones:
+            sys.exit('zone "{0}" does not exists'.format(zone))
 
     topo_loader = FileSystemLoader(topology_dir)
     output_loader = FileSystemLoader(output_dirs)
@@ -113,55 +118,58 @@ def main(arguments=None):
         return [item for y in l for item in (y if type(y) == list or
                                              type(y) == tuple else [y])]
 
-    for subzone in zones[args.zone]:
-        for network in flatten([subzone['network']]):
-            if args.vrf and subzone['vrf'] != args.vrf:
-                continue
-
-            if args.network and network != args.network:
-                continue
-
-            if args.topology and subzone['topology'] != args.topology:
-                continue
-
-            try:
-                topology = Topology(args.zone, subzone['vrf'],
-                                    network, subzone['topology'],
-                                    loader=topo_loader,
-                                    params=subzone.get('params', {}))
-
-                if ((args.ipv4 is True and topology.ipversion != 4) or
-                    (args.ipv6 is True and topology.ipversion != 6)):
-                        continue
-
-                if args.dump_topology is True:
-                    print('# topology: {0}\n'.format(subzone['topology']))
-                    print(topology)
+    for zone in args.zone:
+        for subzone in zones[zone]:
+            for network in flatten([subzone['network']]):
+                if args.vrf and subzone['vrf'] not in args.vrf:
                     continue
 
-                if topology.ipversion == 4:
-                    NetworkGenerator = IPv4NetworkGenerator
-                elif topology.ipversion == 6:
-                    NetworkGenerator = IPv6NetworkGenerator
+                if args.network and network not in args.network:
+                    continue
 
-                print(NetworkGenerator(topology,
-                                       with_hosts=not args.without_hosts)
-                      .render(args.output_template,
-                              output_loader,
-                              params=subzone.get('params', {})))
+                if args.topology and subzone['topology'] not in args.topology:
+                    continue
 
-            except MultipleInvalid as exception:
-                sys.exit('error parsing topology: {0}'.format(exception))
-            except TemplateNotFound as exception:
-                sys.exit('template not found: {0}'.format(exception))
-            except NetworkFull as exception:
-                sys.exit('network full: {0}'.format(exception))
-            except ConfigError as exception:
-                sys.exit('config error: {0}'.format(exception))
-            except UnalignedSubnet as exception:
-                sys.exit('unaligned subnet: {0}'.format(exception))
-            except IOError as exception:
-                sys.exit('io error: {0}'.format(exception))
+                try:
+                    topology = Topology(zone, subzone['vrf'],
+                                        network, subzone['topology'],
+                                        loader=topo_loader,
+                                        params=subzone.get('params', {}))
+
+                    if ((args.ipv4 is True and topology.ipversion != 4) or
+                        (args.ipv6 is True and topology.ipversion != 6)):
+                            continue
+
+                    if args.dump_topology is True:
+                        print('# topology: {0}\n'.format(subzone['topology']))
+                        print(topology)
+                        continue
+
+                    if topology.ipversion == 4:
+                        NetworkGenerator = IPv4NetworkGenerator
+                    elif topology.ipversion == 6:
+                        NetworkGenerator = IPv6NetworkGenerator
+                    else:
+                        raise AssertionError
+
+                    print(NetworkGenerator(topology,
+                                           with_hosts=not args.without_hosts)
+                          .render(args.output_template,
+                                  output_loader,
+                                  params=subzone.get('params', {})))
+
+                except MultipleInvalid as exception:
+                    sys.exit('error parsing topology: {0}'.format(exception))
+                except TemplateNotFound as exception:
+                    sys.exit('template not found: {0}'.format(exception))
+                except NetworkFull as exception:
+                    sys.exit('network full: {0}'.format(exception))
+                except ConfigError as exception:
+                    sys.exit('config error: {0}'.format(exception))
+                except UnalignedSubnet as exception:
+                    sys.exit('unaligned subnet: {0}'.format(exception))
+                except IOError as exception:
+                    sys.exit('io error: {0}'.format(exception))
 
 
 if __name__ == '__main__':
