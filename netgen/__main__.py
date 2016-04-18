@@ -13,6 +13,12 @@ from pkg_resources import resource_filename
 from .engine import IPv4NetworkGenerator, IPv6NetworkGenerator, Topology
 from .exception import NetworkFull, ConfigError, UnalignedSubnet
 
+def flatten(l):
+    return [item for y in l for item in (y if type(y) == list or
+                                         type(y) == tuple else [y])]
+
+
+
 def parse_arguments(arguments):
 
     parser = argparse.ArgumentParser(description='generate ip address plan')
@@ -114,10 +120,6 @@ def main(arguments=None):
     topo_loader = FileSystemLoader(topology_dir)
     output_loader = FileSystemLoader(output_dirs)
 
-    def flatten(l):
-        return [item for y in l for item in (y if type(y) == list or
-                                             type(y) == tuple else [y])]
-
     for zone in args.zone:
         for subzone in zones[zone]:
             for network in flatten([subzone['network']]):
@@ -152,11 +154,12 @@ def main(arguments=None):
                     else:
                         raise AssertionError
 
-                    print(NetworkGenerator(topology,
-                                           with_hosts=not args.without_hosts)
-                          .render(args.output_template,
-                                  output_loader,
-                                  params=subzone.get('params', {})))
+                    ngen = NetworkGenerator(topology,
+                                            with_hosts=not args.without_hosts)
+
+                    ngen.stream(args.output_template,
+                                output_loader, sys.stdout,
+                                params=subzone.get('params', {}))
 
                 except MultipleInvalid as exception:
                     sys.exit('error parsing topology: {0}'.format(exception))
