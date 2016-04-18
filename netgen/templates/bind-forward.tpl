@@ -4,7 +4,7 @@
 {%- for subnet in zone.subnets %}
 ; Subnet {{ zone.name }}{{ subnet.name }}
 {%- for host in subnet.hosts %}
-{{ host.name }}{{ dns_domain }} IN {% if ipv == 4 %}A{% else %}AAAA{% endif %} {{ host.address }}
+{{ host.name }}{{ dns_domain }} IN {{ ip46('A', 'AAAA') }} {{ host.address }}
 {%- endfor %}
 {%- endfor %}
 {%- endfor %}
