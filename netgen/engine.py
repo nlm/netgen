@@ -44,6 +44,10 @@ class TemplateUtils(object):
                                      .format(ipversion))
         return minpref2
 
+    @staticmethod
+    def range1(*args, **kwargs):
+        return [i + 1 for i in range(*args, **kwargs)]
+
 
 def add_custom_filters(environment):
     environment.filters['dotreverse'] = TemplateUtils.filter_dot_reverse
@@ -53,6 +57,7 @@ def add_custom_globals(environment, ipversion):
     environment.globals['ipv46'] = TemplateUtils.ipver
     environment.globals['ip46'] = TemplateUtils.ip46(ipversion)
     environment.globals['minpref'] = TemplateUtils.minpref(ipversion)
+    environment.globals['range1'] = TemplateUtils.range1
     import math
     math.int = int
     math.float = float
