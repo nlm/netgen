@@ -106,12 +106,11 @@ class Topology(object):
 
     def __str__(self):
         if self._rendered is None:
-            self._rendered = self.template.render(
-                zone=self.zone,
-                vrf=self.vrf,
-                network=self.network,
-                params=self.params,
-                ipv=self.ipversion)
+            self._rendered = self.template.render(zone=self.zone,
+                                                  vrf=self.vrf,
+                                                  network=self.network,
+                                                  params=self.params,
+                                                  ipv=self.ipversion)
         return self._rendered
 
 
@@ -391,7 +390,6 @@ class NetworkGenerator(object):
 
     def parse(self, data):
         data = self.topology_schema(data)
-
         zone = self.add_zone(data['zone'], data['network'], data['vrf'])
 
         for elt in data.get('subnets', []):
