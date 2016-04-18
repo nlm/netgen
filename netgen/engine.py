@@ -431,6 +431,17 @@ class NetworkGenerator(object):
                                ipv=self.ipversion,
                                params=(params or {}))
 
+    def stream(self, template, loader, output_file, params=None):
+        env = Environment(loader=loader,
+                          extensions=['jinja2.ext.do'],
+                          keep_trailing_newline=True)
+        add_custom_filters(env)
+        add_custom_globals(env, self.ipversion)
+        template = env.get_template('{0}.tpl'.format(template))
+        template.stream(zones=self.zones,
+                        ipv=self.ipversion,
+                        params=(params or {})).dump(output_file)
+
 
 class IPv4NetworkGenerator(NetworkGenerator):
 
