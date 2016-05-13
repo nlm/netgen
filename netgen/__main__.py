@@ -43,11 +43,11 @@ def parse_arguments(arguments):
     filters.add_argument('--vrf', '-v',  metavar='VRF', type=str, default=None,
                         action='append',
                         help='only output zones in this vrf (default: all)')
-    filters.add_argument('--network', '-n',  metavar='NETWORK', type=str, default=None,
-                        action='append',
+    filters.add_argument('--network', '-n',  metavar='NETWORK', type=str,
+                        default=None, action='append',
                         help='only output zones using this network (default: all)')
-    filters.add_argument('--topology', '-t',  metavar='TOPOLOGY', type=str, default=None,
-                        action='append',
+    filters.add_argument('--topology', '-t',  metavar='TOPOLOGY', type=str,
+                        default=None, action='append',
                         help='only output zones using this template (default: all)')
 
     ipv_group = filters.add_mutually_exclusive_group()
