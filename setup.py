@@ -2,8 +2,8 @@ from setuptools import setup,find_packages
 
 setup(
     name = "netgen",
-    version = "0.4b11",
-    packages = ['netgen'],
+    version = "0.4b12",
+    packages = find_packages(),
     author = "Nicolas Limage",
     author_email = 'github@xephon.org',
     description = "a templated ip address plan generator",
@@ -21,7 +21,7 @@ setup(
     ],
     install_requires = [
         'Jinja2',
-        'PyYAML',
+        'ruamel',
         'voluptuous>=0.8.0',
         'ipaddress',
         'six',

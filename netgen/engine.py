@@ -1,7 +1,7 @@
 from __future__ import print_function, unicode_literals
 from six import u
 import sys
-import yaml
+from ruamel import yaml
 import re
 from ipaddress import IPv4Network, IPv4Address
 from ipaddress import IPv6Network, IPv6Address
@@ -52,12 +52,16 @@ class TemplateUtils(object):
 def add_custom_filters(environment):
     environment.filters['dotreverse'] = TemplateUtils.filter_dot_reverse
 
+def chunker(seq, size):
+    return (seq[pos:pos + size] for pos in xrange(0, len(seq), size))
 
 def add_custom_globals(environment, ipversion):
     environment.globals['ipv46'] = TemplateUtils.ipver
     environment.globals['ip46'] = TemplateUtils.ip46(ipversion)
     environment.globals['minpref'] = TemplateUtils.minpref(ipversion)
     environment.globals['range1'] = TemplateUtils.range1
+    environment.globals['range'] = range
+    environment.globals['chunk'] = chunker
     import math
     math.int = int
     math.float = float
