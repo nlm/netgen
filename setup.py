@@ -21,7 +21,7 @@ setup(
     ],
     install_requires = [
         'Jinja2',
-        'ruamel.yaml',
+        'PyYAML',
         'voluptuous>=0.8.0',
         'ipaddress',
         'six',

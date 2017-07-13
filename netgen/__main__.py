@@ -3,7 +3,7 @@ from __future__ import print_function, unicode_literals
 import sys
 import os
 import argparse
-from ruamel import yaml
+import yaml
 from six import u
 from voluptuous import Schema, MultipleInvalid, Optional, Required, Extra, Any
 from ipaddress import IPv4Network, IPv6Network

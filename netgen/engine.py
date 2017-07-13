@@ -1,7 +1,7 @@
 from __future__ import print_function, unicode_literals
 from six import u
 import sys
-from ruamel import yaml
+import yaml
 import re
 from ipaddress import IPv4Network, IPv4Address
 from ipaddress import IPv6Network, IPv6Address
