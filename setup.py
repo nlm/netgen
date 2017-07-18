@@ -23,14 +23,16 @@ setup(
         'Jinja2',
         'PyYAML',
         'voluptuous>=0.8.0',
-        'ipaddress',
+        'ipaddr',
         'six',
     ],
     entry_points = {
         'console_scripts': [
             'network-generator = netgen.__main__:main',
             'netgen = netgen.__main__:main',
-            'netgen-free = netgen.freespace:main',
+            'netgen-stats = netgen.stats:main',
+            'netgen-yaml2json = netgen.converters:yaml2json',
+            'netgen-json2yaml = netgen.converters:json2yaml',
         ],
     },
     include_package_data = True,
