@@ -23,7 +23,7 @@ setup(
         'Jinja2',
         'PyYAML',
         'voluptuous>=0.8.0',
-        'ipaddr',
+        'ipaddress',
         'six',
     ],
     entry_points = {
