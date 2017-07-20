@@ -3,6 +3,7 @@ from __future__ import print_function, unicode_literals
 import sys
 import os
 import argparse
+import json
 import yaml
 from six import u
 from voluptuous import Schema, MultipleInvalid, Optional, Required, Extra, Any
@@ -17,7 +18,31 @@ def flatten(l):
     return [item for y in l for item in (y if type(y) == list or
                                          type(y) == tuple else [y])]
 
+def auto_convert_value(value):
+    if value == 'true':
+        return True
+    elif value == 'false':
+        return False
+    try:
+        return int(value)
+    except ValueError:
+        pass
+    try:
+        return float(value)
+    except ValueError:
+        pass
+    return value
 
+def auto_convert_network(network_address):
+    try:
+        return IPv4Network(u(network_address))
+    except:
+        pass
+    try:
+        return IPv6Network(u(network_address))
+    except:
+        pass
+    raise ValueError(network_address)
 
 def parse_arguments(arguments):
 
@@ -37,6 +62,8 @@ def parse_arguments(arguments):
                               ' instead of regular output'))
     parser.add_argument('--debug', action='store_true', default=False,
                         help='don\'t catch exceptions')
+    parser.add_argument('--with-param', '-p', action='append', nargs=2,
+                        default=[], help='override network params')
 
     filters = parser.add_argument_group('filters')
 
@@ -45,7 +72,10 @@ def parse_arguments(arguments):
                         help='only output zones in this vrf (default: all)')
     filters.add_argument('--network', '-n',  metavar='NETWORK', type=str,
                         default=None, action='append',
-                        help='only output zones using this network (default: all)')
+                        help='only output network using this address (default: all)')
+    filters.add_argument('--in-network', '-N',  metavar='NETWORK', type=str,
+                        default=None, action='append',
+                        help='only output networks contained in this network (default: all)')
     filters.add_argument('--topology', '-t',  metavar='TOPOLOGY', type=str,
                         default=None, action='append',
                         help='only output zones using this template (default: all)')
@@ -58,6 +88,11 @@ def parse_arguments(arguments):
                            help='only output ipv6 entries')
 
     args = parser.parse_args(arguments)
+
+    params = {}
+    for key, value in args.with_param:
+        params.update({key: auto_convert_value(value)})
+    args.params = params
 
     return args
 
@@ -123,20 +158,37 @@ def main(arguments=None):
     for zone in args.zone:
         for subzone in zones[zone]:
             for network in flatten([subzone['network']]):
+                # only output networks in the specified vrf
                 if args.vrf and subzone['vrf'] not in args.vrf:
                     continue
 
+                # check if exactly matching the network address
                 if args.network and network not in args.network:
                     continue
 
+                # continue if not a subnet of a selected network
+                if args.in_network:
+                    subzone_network = auto_convert_network(network)
+                    for network_address in args.in_network:
+                        wanted_network = auto_convert_network(network_address)
+                        if (type(wanted_network) == type(subzone_network)
+                            and subzone_network.subnet_of(wanted_network)):
+                            break
+                    else:
+                        continue
+
+                # only output networks using this topology
                 if args.topology and subzone['topology'] not in args.topology:
                     continue
 
                 try:
+                    params = subzone.get('params', {}).copy()
+                    params.update(args.params)
+
                     topology = Topology(zone, subzone['vrf'],
                                         network, subzone['topology'],
                                         loader=topo_loader,
-                                        params=subzone.get('params', {}))
+                                        params=params)
 
                     if ((args.ipv4 is True and topology.ipversion != 4) or
                         (args.ipv6 is True and topology.ipversion != 6)):
@@ -157,9 +209,10 @@ def main(arguments=None):
                     ngen = NetworkGenerator(topology,
                                             with_hosts=not args.without_hosts)
 
+
                     ngen.stream(args.output_template,
                                 output_loader, sys.stdout,
-                                params=subzone.get('params', {}))
+                                params=params)
 
                 except MultipleInvalid as exception:
                     sys.exit('error parsing topology: {0}'.format(exception))
