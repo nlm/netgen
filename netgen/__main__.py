@@ -4,6 +4,7 @@ import sys
 import os
 import argparse
 import json
+import re
 import yaml
 from six import u
 from voluptuous import Schema, MultipleInvalid, Optional, Required, Extra, Any
@@ -44,6 +45,12 @@ def auto_convert_network(network_address):
         pass
     raise ValueError(network_address)
 
+def regular_expression(pattern):
+    try:
+        return re.compile(pattern)
+    except:
+        raise ValueError(pattern)
+
 def parse_arguments(arguments):
 
     parser = argparse.ArgumentParser(description='generate ip address plan')
@@ -78,7 +85,10 @@ def parse_arguments(arguments):
                         help='only output networks contained in this network (default: all)')
     filters.add_argument('--topology', '-t',  metavar='TOPOLOGY', type=str,
                         default=None, action='append',
-                        help='only output zones using this template (default: all)')
+                        help='only output networks using this template (default: all)')
+    filters.add_argument('--match-topology', '-T',  metavar='TOPOLOGY',
+                        default=None, action='append', type=regular_expression,
+                        help='only output networks matching this template (default: all)')
 
     ipv_group = filters.add_mutually_exclusive_group()
 
@@ -180,6 +190,14 @@ def main(arguments=None):
                 # only output networks using this topology
                 if args.topology and subzone['topology'] not in args.topology:
                     continue
+
+                # continue if topology does not match patterns
+                if args.topology:
+                    for regexp in args.match_topology:
+                        if regexp.match(subzone['topology']):
+                            break
+                    else:
+                        continue
 
                 try:
                     params = subzone.get('params', {}).copy()
