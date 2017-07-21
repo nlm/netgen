@@ -6,7 +6,7 @@ import re
 from ipaddress import IPv4Network, IPv4Address
 from ipaddress import IPv6Network, IPv6Address
 from ipaddress import AddressValueError
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from voluptuous import Schema, Match, Required, Optional, MultipleInvalid, Any
 from math import log, ceil
 
@@ -48,20 +48,20 @@ class TemplateUtils(object):
     def range1(*args, **kwargs):
         return [i + 1 for i in range(*args, **kwargs)]
 
+    @staticmethod
+    def xrange1(*args, **kwargs):
+        for i in xrange(*args, **kwargs):
+            yield i + 1
+
 
 def add_custom_filters(environment):
     environment.filters['dotreverse'] = TemplateUtils.filter_dot_reverse
-
-def chunker(seq, size):
-    return (seq[pos:pos + size] for pos in xrange(0, len(seq), size))
 
 def add_custom_globals(environment, ipversion):
     environment.globals['ipv46'] = TemplateUtils.ipver
     environment.globals['ip46'] = TemplateUtils.ip46(ipversion)
     environment.globals['minpref'] = TemplateUtils.minpref(ipversion)
-    environment.globals['range1'] = TemplateUtils.range1
-    environment.globals['range'] = range
-    environment.globals['chunk'] = chunker
+    environment.globals['range1'] = TemplateUtils.xrange1
     import math
     math.int = int
     math.float = float
@@ -89,6 +89,7 @@ class Topology(object):
         if loader is None:
             loader = FileSystemLoader('templates')
         env = Environment(loader=loader,
+                          undefined=StrictUndefined,
                           extensions=['jinja2.ext.do',
                                       'jinja2.ext.loopcontrols'])
         add_custom_filters(env)
