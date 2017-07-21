@@ -2,7 +2,7 @@ from setuptools import setup,find_packages
 
 setup(
     name = "netgen",
-    version = "0.5.0-beta2",
+    version = "0.5.0-beta2.1",
     packages = find_packages(),
     author = "Nicolas Limage",
     author_email = 'github@xephon.org',
@@ -20,7 +20,7 @@ setup(
         'Topic :: System :: Networking',
     ],
     install_requires = [
-        'Jinja2',
+        'Jinja2>=2.9',
         'PyYAML',
         'voluptuous>=0.8.0',
         'ipaddress',

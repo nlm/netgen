@@ -192,7 +192,7 @@ def main(arguments=None):
                     continue
 
                 # continue if topology does not match patterns
-                if args.topology:
+                if args.match_topology:
                     for regexp in args.match_topology:
                         if regexp.match(subzone['topology']):
                             break
