@@ -80,8 +80,8 @@ def parse_arguments(arguments):
     filters.add_argument('--network', '-n',  metavar='NETWORK', type=str,
                         default=None, action='append',
                         help='only output network using this address (default: all)')
-    filters.add_argument('--in-network', '-N',  metavar='NETWORK', type=str,
-                        default=None, action='append',
+    filters.add_argument('--in-network', '-N',  metavar='NETWORK',
+                        default=None, action='append', type=auto_convert_network,
                         help='only output networks contained in this network (default: all)')
     filters.add_argument('--topology', '-t',  metavar='TOPOLOGY', type=str,
                         default=None, action='append',
@@ -179,8 +179,7 @@ def main(arguments=None):
                 # continue if not a subnet of a selected network
                 if args.in_network:
                     subzone_network = auto_convert_network(network)
-                    for network_address in args.in_network:
-                        wanted_network = auto_convert_network(network_address)
+                    for wanted_network in args.in_network:
                         if (type(wanted_network) == type(subzone_network)
                             and subzone_network.subnet_of(wanted_network)):
                             break
