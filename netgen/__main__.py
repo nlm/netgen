@@ -19,6 +19,10 @@ def flatten(l):
     return [item for y in l for item in (y if type(y) == list or
                                          type(y) == tuple else [y])]
 
+def xflatten(l):
+    return (item for y in l for item in (y if type(y) == list or
+                                         type(y) == tuple else [y]))
+
 def auto_convert_value(value):
     if value == 'true':
         return True
@@ -167,7 +171,7 @@ def main(arguments=None):
 
     for zone in args.zone:
         for subzone in zones[zone]:
-            for network in flatten([subzone['network']]):
+            for network in xflatten([subzone['network']]):
                 # only output networks in the specified vrf
                 if args.vrf and subzone['vrf'] not in args.vrf:
                     continue

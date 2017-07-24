@@ -50,8 +50,7 @@ class TemplateUtils(object):
 
     @staticmethod
     def xrange1(*args, **kwargs):
-        for i in xrange(*args, **kwargs):
-            yield i + 1
+        return (i + 1 for i in xrange(*args, **kwargs))
 
 
 def add_custom_filters(environment):
