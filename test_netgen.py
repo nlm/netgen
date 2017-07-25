@@ -186,7 +186,8 @@ class TemplateUtils(unittest.TestCase):
 
     def test_orange(self):
         for count in range(10):
-            self.assertEqual(self.TemplateUtils.orange(count), range(count))
+            self.assertEqual([i for i in self.TemplateUtils.orange(count)],
+                             [i for i in range(count)])
 
     def test_xorange(self):
         for count in range(10):
@@ -196,7 +197,7 @@ class TemplateUtils(unittest.TestCase):
     def test_orange_offset(self):
         for count in range(10):
             for offset in range(10):
-                self.assertEqual(self.TemplateUtils.orange(count, offset=offset),
+                self.assertEqual([i for i in self.TemplateUtils.orange(count, offset=offset)],
                                  [i + offset for i in range(count)])
 
     def test_xorange_offset(self):
