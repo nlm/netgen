@@ -1,6 +1,7 @@
 from __future__ import print_function, unicode_literals
 import unittest
 import netgen
+import netgen.engine
 from ipaddress import IPv4Address, IPv4Network
 
 class IPv4Host(unittest.TestCase):
@@ -177,3 +178,31 @@ class UnalignedIPv4Zone(unittest.TestCase):
 
     def test_subnets(self):
         self.assertEqual(self.zone.subnets, [])
+
+class TemplateUtils(unittest.TestCase):
+
+    def setUp(self):
+        self.TemplateUtils = netgen.engine.TemplateUtils
+
+    def test_orange(self):
+        for count in range(10):
+            self.assertEqual(self.TemplateUtils.orange(count), range(count))
+
+    def test_xorange(self):
+        for count in range(10):
+            self.assertEqual([i for i in self.TemplateUtils.orange(count)],
+                             [i for i in range(count)])
+
+    def test_orange_offset(self):
+        for count in range(10):
+            for offset in range(10):
+                self.assertEqual(self.TemplateUtils.orange(count, offset=offset),
+                                 [i + offset for i in range(count)])
+
+    def test_xorange_offset(self):
+        for count in range(10):
+            for offset in range(10):
+                self.assertEqual([i for i in self.TemplateUtils.xorange(count, offset=offset)],
+                                 [i + offset for i in range(count)])
+
+

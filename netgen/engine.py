@@ -7,8 +7,9 @@ from ipaddress import IPv4Network, IPv4Address
 from ipaddress import IPv6Network, IPv6Address
 from ipaddress import AddressValueError
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
-from voluptuous import Schema, Match, Required, Optional, MultipleInvalid, Any
 from math import log, ceil
+from six.moves import xrange
+from voluptuous import Schema, Match, Required, Optional, MultipleInvalid, Any
 
 from .exception import NetworkFull, ConfigError, UnalignedSubnet, ParameterError
 
@@ -45,12 +46,22 @@ class TemplateUtils(object):
         return minpref2
 
     @staticmethod
+    def orange(*args, **kwargs):
+        offset = int(kwargs.get('offset', 0))
+        return [i + offset for i in range(*args)]
+
+    @staticmethod
+    def xorange(*args, **kwargs):
+        offset = int(kwargs.get('offset', 0))
+        return (i + offset for i in xrange(*args))
+
+    @staticmethod
     def range1(*args, **kwargs):
-        return [i + 1 for i in range(*args, **kwargs)]
+        return self.orange(*args, offset=1, **kwargs)
 
     @staticmethod
     def xrange1(*args, **kwargs):
-        return (i + 1 for i in xrange(*args, **kwargs))
+        return self.xorange(*args, offset=1, **kwargs)
 
 
 def add_custom_filters(environment):
@@ -60,6 +71,7 @@ def add_custom_globals(environment, ipversion):
     environment.globals['ipv46'] = TemplateUtils.ipver
     environment.globals['ip46'] = TemplateUtils.ip46(ipversion)
     environment.globals['minpref'] = TemplateUtils.minpref(ipversion)
+    environment.globals['range'] = TemplateUtils.xorange
     environment.globals['range1'] = TemplateUtils.xrange1
     import math
     math.int = int

@@ -5,12 +5,14 @@ import os
 import argparse
 import json
 import re
+import traceback
 import yaml
 from six import u
 from voluptuous import Schema, MultipleInvalid, Optional, Required, Extra, Any
 from ipaddress import IPv4Network, IPv6Network
 from jinja2 import FileSystemLoader
-from jinja2.exceptions import TemplateNotFound
+from jinja2.exceptions import (TemplateNotFound, TemplateSyntaxError,
+                               TemplateRuntimeError)
 from pkg_resources import resource_filename
 from .engine import IPv4NetworkGenerator, IPv6NetworkGenerator, Topology
 from .exception import NetworkFull, ConfigError, UnalignedSubnet
@@ -239,6 +241,9 @@ def main(arguments=None):
                     sys.exit('error parsing topology: {0}'.format(exception))
                 except TemplateNotFound as exception:
                     sys.exit('template not found: {0}'.format(exception))
+                except (TemplateRuntimeError, TemplateSyntaxError) as exception:
+                    st = traceback.format_exc().splitlines()[-3:]
+                    sys.exit('error in template:\n{0}'.format('\n'.join(st)))
                 except NetworkFull as exception:
                     sys.exit('network full: {0}'.format(exception))
                 except ConfigError as exception:
