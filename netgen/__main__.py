@@ -120,10 +120,8 @@ def main(arguments=None):
         str: [{
             Required('vrf'): str,
             Required('topology'): str,
-            Required('network'): Any([Any(lambda x: str(IPv4Network(u(x))),
-                                           lambda x: str(IPv6Network(u(x))))],
-                                     lambda x: str(IPv4Network(u(x))),
-                                     lambda x: str(IPv6Network(u(x)))),
+            Required('network'): Any([lambda x: str(auto_convert_network(x))],
+                                     lambda x: str(auto_convert_network(x))),
             Optional('params'): {Extra: object},
         }]
     })
