@@ -1,4 +1,5 @@
 from __future__ import print_function, unicode_literals
+from colors import color
 from six import u
 import sys
 import yaml
@@ -19,6 +20,13 @@ class TemplateUtils(object):
     @staticmethod
     def filter_dot_reverse(value):
         return ".".join(reversed(str(value).split(".")))
+
+    @staticmethod
+    def filter_colored(text, fg, bg=None, style=None):
+        try:
+            return color(text, fg=fg, bg=bg, style=style)
+        except Exception as exc:
+            raise TemplateRuntimeError(exc)
 
     @classmethod
     def ip46(cls, ipv):
@@ -76,6 +84,7 @@ class TemplateUtils(object):
 
 def add_custom_filters(environment):
     environment.filters['dotreverse'] = TemplateUtils.filter_dot_reverse
+    environment.filters['colored'] = TemplateUtils.filter_colored
 
 def add_custom_globals(environment, ipversion):
     environment.globals['ipv46'] = TemplateUtils.ipver
@@ -204,12 +213,12 @@ class Subnet(object):
             print('warning: fixed {0} -> {1}'.format(network, self.network),
                   file=sys.stderr)
 
-        if (self.ip_version == 6 and not shadow
-            and 127 > self.network.prefixlen > 64):
-            print('warning: use of ipv6 prefix length '
-                  'larger than 64 ({0}: {1}) is discouraged '
-                  '(except 127,128)'.format(name, self.network.prefixlen),
-                  file=sys.stderr)
+#        if (self.ip_version == 6 and not shadow
+#            and 127 > self.network.prefixlen > 64):
+#            print('warning: use of ipv6 prefix length '
+#                  'larger than 64 ({0}: {1}) is discouraged '
+#                  '(except 127,128)'.format(name, self.network.prefixlen),
+#                  file=sys.stderr)
 
     def get_next_ip(self, prefixlen):
         if not self.net_min_prefixlen < prefixlen < self.net_max_prefixlen:

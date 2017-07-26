@@ -59,6 +59,8 @@ def regular_expression(pattern):
 
 def parse_arguments(arguments):
 
+    default_template = 'netgen-color' if sys.stdout.isatty() else 'netgen'
+
     parser = argparse.ArgumentParser(description='generate ip address plan')
     parser.add_argument('--data', '-d', metavar='DIR', type=str,
                         help='the data directory (default: .)')
@@ -68,7 +70,7 @@ def parse_arguments(arguments):
     parser.add_argument('--without-hosts', '-H', action='store_true',
                         default=False, help='hide hosts')
     parser.add_argument('--output-template', '-o', metavar='TEMPLATE',
-                        type=str, default='netgen',
+                        type=str, default=default_template,
                         help='output template to use for rendering')
     parser.add_argument('--dump-topology', action='store_true', default=False,
                         help=('dump the intermediate topology'

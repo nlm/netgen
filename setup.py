@@ -2,7 +2,7 @@ from setuptools import setup,find_packages
 
 setup(
     name = "netgen",
-    version = "0.5.0beta4",
+    version = "0.5.0beta5",
     packages = find_packages(),
     author = "Nicolas Limage",
     author_email = 'github@xephon.org',
