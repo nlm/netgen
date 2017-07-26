@@ -25,6 +25,7 @@ setup(
         'voluptuous>=0.8.0',
         'ipaddress',
         'six',
+        'ansicolors',
     ],
     entry_points = {
         'console_scripts': [
