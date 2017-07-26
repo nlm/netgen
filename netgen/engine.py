@@ -7,6 +7,7 @@ from ipaddress import IPv4Network, IPv4Address
 from ipaddress import IPv6Network, IPv6Address
 from ipaddress import AddressValueError
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
+from jinja2.exceptions import TemplateRuntimeError
 from math import log, ceil
 from six.moves import xrange
 from voluptuous import Schema, Match, Required, Optional, MultipleInvalid, Any
@@ -63,6 +64,15 @@ class TemplateUtils(object):
     def xrange1(*args, **kwargs):
         return self.xorange(*args, offset=1, **kwargs)
 
+    @staticmethod
+    def func_raise(message):
+        raise TemplateRuntimeError(message)
+
+    @staticmethod
+    def func_assert(expr, message=None):
+        if not expr:
+            raise TemplateRuntimeError(message)
+
 
 def add_custom_filters(environment):
     environment.filters['dotreverse'] = TemplateUtils.filter_dot_reverse
@@ -73,6 +83,8 @@ def add_custom_globals(environment, ipversion):
     environment.globals['minpref'] = TemplateUtils.minpref(ipversion)
     environment.globals['range'] = TemplateUtils.xorange
     environment.globals['range1'] = TemplateUtils.xrange1
+    environment.globals['raise'] = TemplateUtils.func_raise
+    environment.globals['assert'] = TemplateUtils.func_assert
     import math
     math.int = int
     math.float = float
