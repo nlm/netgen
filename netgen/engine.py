@@ -132,7 +132,7 @@ class Subnet(object):
         if not self.net_min_prefixlen < prefixlen < self.net_max_prefixlen:
             raise ConfigError('invalid padding prefixlen: {0}'
                               .format(prefixlen))
-        tmpnet = self.Network('{0}/{1}'.format(self.cur_addr, prefixlen),
+        tmpnet = self.Network(u('{0}/{1}'.format(self.cur_addr, prefixlen)),
                              strict=False)
         return tmpnet.network_address + tmpnet.num_addresses + 1
 
