@@ -8,6 +8,10 @@ from six import u
 import sys
 from voluptuous import Schema, Match, Required, Optional, MultipleInvalid, Any
 import yaml
+try:
+    from yaml import CSafeLoader as YAMLLoader, CSafeDumper as YAMLDumper
+except ImportError:
+    from yaml import SafeLoader as YAMLLoader, SafeDumper as YAMLDumper
 
 from .exception import NetworkFull, ConfigError, UnalignedSubnet
 from .templateutils import TemplateUtils
@@ -46,10 +50,11 @@ class Topology(object):
     @property
     def data(self):
         if self._data is None:
-            self._data = yaml.safe_load(str(self))
+            self._data = yaml.load(self.rendered, Loader=YAMLLoader)
         return self._data
 
-    def __str__(self):
+    @property
+    def rendered(self):
         if self._rendered is None:
             self._rendered = self.template.render(zone=self.zone,
                                                   vrf=self.vrf,
@@ -57,6 +62,9 @@ class Topology(object):
                                                   params=self.params,
                                                   ipv=self.ipversion)
         return self._rendered
+
+    def __str__(self):
+        return self.rendered
 
 
 class Host(object):

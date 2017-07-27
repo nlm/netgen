@@ -3,6 +3,11 @@ import sys
 import yaml
 import json
 
+try:
+    from yaml import CSafeLoader as YAMLLoader, CSafeDumper as YAMLDumper
+except ImportError:
+    from yaml import SafeLoader as YAMLLoader, SafeDumper as YAMLDumper
+
 def yaml2json():
     parser = argparse.ArgumentParser()
     parser.add_argument('input', nargs='?',
@@ -12,7 +17,7 @@ def yaml2json():
                         type=argparse.FileType('w'), default=sys.stdout,
                         help='the json output file name')
     args = parser.parse_args()
-    json.dump(yaml.safe_load(args.input), args.output)
+    json.dump(yaml.load(args.input, Loader=YAMLLoader), args.output)
 
 def json2yaml():
     parser = argparse.ArgumentParser()
@@ -23,4 +28,4 @@ def json2yaml():
                         type=argparse.FileType('w'), default=sys.stdout,
                         help='the yaml output file name')
     args = parser.parse_args()
-    yaml.safe_dump(json.load(args.input), args.output)
+    yaml.dump(json.load(args.input), args.output, Dumper=YAMLDumper)

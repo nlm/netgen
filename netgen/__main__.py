@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 from __future__ import print_function
-import sys
-import os
 import argparse
 import json
+import os
 import re
+import sys
 import traceback
 import yaml
 from six import u
@@ -14,6 +14,11 @@ from jinja2 import FileSystemLoader
 from jinja2.exceptions import (TemplateNotFound, TemplateSyntaxError,
                                TemplateRuntimeError)
 from pkg_resources import resource_filename
+try:
+    from yaml import CSafeLoader as YAMLLoader, CSafeDumper as YAMLDumper
+except ImportError:
+    from yaml import SafeLoader as YAMLLoader, SafeDumper as YAMLDumper
+
 from .engine import IPv4NetworkGenerator, IPv6NetworkGenerator, Topology
 from .exception import NetworkFull, ConfigError, UnalignedSubnet
 
@@ -152,7 +157,7 @@ def main(arguments=None):
 
     try:
         with open(zones_file, 'r') as zones_fd:
-            zones = schema(yaml.safe_load(zones_fd))
+            zones = schema(yaml.load(zones_fd, Loader=YAMLLoader))
     except MultipleInvalid as exception:
         if args.debug:
             raise
