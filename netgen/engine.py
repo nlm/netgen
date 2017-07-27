@@ -1,106 +1,16 @@
-from __future__ import print_function, unicode_literals
-from colors import color
-from six import u
-import sys
-import yaml
-import re
+from __future__ import print_function
 from ipaddress import IPv4Network, IPv4Address
 from ipaddress import IPv6Network, IPv6Address
 from ipaddress import AddressValueError
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
-from jinja2.exceptions import TemplateRuntimeError
-from math import log, ceil
-from six.moves import xrange
+import re
+from six import u
+import sys
 from voluptuous import Schema, Match, Required, Optional, MultipleInvalid, Any
+import yaml
 
-from .exception import NetworkFull, ConfigError, UnalignedSubnet, ParameterError
-
-class TemplateUtils(object):
-
-    @staticmethod
-    def filter_dot_reverse(value):
-        return ".".join(reversed(str(value).split(".")))
-
-    @staticmethod
-    def filter_colored(text, fg, bg=None, style=None):
-        try:
-            return color(text, fg=fg, bg=bg, style=style)
-        except Exception as exc:
-            raise TemplateRuntimeError(exc)
-
-    @classmethod
-    def ip46(cls, ipv):
-        return lambda valuev4, valuev6: cls.ipver(ipv, valuev4, valuev6)
-
-    @staticmethod
-    def ipver(ipversion, valuev4, valuev6):
-        if ipversion == 4:
-            return valuev4
-        elif ipversion == 6:
-            return valuev6
-        else:
-            raise ParameterError('invalid value for ipversion: {0}'
-                                 .format(ipversion))
-
-    @staticmethod
-    def minpref(ipversion):
-        def minpref2(host_count):
-            if ipversion == 4:
-                return 32 - int(ceil(log(host_count, 2)))
-            elif ipversion == 6:
-                return min(64, 128 - int(ceil(log(host_count, 2))))
-            else:
-                raise ParameterError('invalid value for ipversion: {0}'
-                                     .format(ipversion))
-        return minpref2
-
-    @staticmethod
-    def orange(*args, **kwargs):
-        offset = int(kwargs.get('offset', 0))
-        return [i + offset for i in range(*args)]
-
-    @staticmethod
-    def xorange(*args, **kwargs):
-        offset = int(kwargs.get('offset', 0))
-        return (i + offset for i in xrange(*args))
-
-    @staticmethod
-    def range1(*args, **kwargs):
-        return self.orange(*args, offset=1, **kwargs)
-
-    @staticmethod
-    def xrange1(*args, **kwargs):
-        return self.xorange(*args, offset=1, **kwargs)
-
-    @staticmethod
-    def func_raise(message):
-        raise TemplateRuntimeError(message)
-
-    @staticmethod
-    def func_assert(expr, message=None):
-        if not expr:
-            raise TemplateRuntimeError(message)
-
-
-def add_custom_filters(environment):
-    environment.filters['dotreverse'] = TemplateUtils.filter_dot_reverse
-    environment.filters['colored'] = TemplateUtils.filter_colored
-
-def add_custom_globals(environment, ipversion):
-    environment.globals['ipv46'] = TemplateUtils.ipver
-    environment.globals['ip46'] = TemplateUtils.ip46(ipversion)
-    environment.globals['minpref'] = TemplateUtils.minpref(ipversion)
-    environment.globals['range'] = TemplateUtils.xorange
-    environment.globals['range1'] = TemplateUtils.xrange1
-    environment.globals['raise'] = TemplateUtils.func_raise
-    environment.globals['assert'] = TemplateUtils.func_assert
-    import math
-    math.int = int
-    math.float = float
-    math.round = round
-    math.min = min
-    math.max = max
-    environment.globals['math'] = math
+from .exception import NetworkFull, ConfigError, UnalignedSubnet
+from .templateutils import TemplateUtils
 
 
 class Topology(object):
@@ -124,16 +34,14 @@ class Topology(object):
                           undefined=StrictUndefined,
                           extensions=['jinja2.ext.do',
                                       'jinja2.ext.loopcontrols'])
-        add_custom_filters(env)
-        add_custom_globals(env, self.ipversion)
+        TemplateUtils(self.ipversion).setup_environment(env)
+
         self.template = env.get_template('{0}.yaml'.format(template))
         self.zone = zone
         self.vrf = vrf
-        self.params = 0
         self.params = params if params is not None else {}
         self._rendered = None
         self._data = None
-
 
     @property
     def data(self):
@@ -311,14 +219,14 @@ class Zone(object):
             a Network object
         """
         try:
-            network = self.Network('{0}/{1}'.format(self.cur_addr, prefixlen),
+            network = self.Network(u('{0}/{1}'.format(self.cur_addr, prefixlen)),
                                    strict=True)
         except ValueError:
-            net1 = self.Network('{0}/{1}'.format(self.cur_addr, prefixlen),
+            net1 = self.Network(u('{0}/{1}'.format(self.cur_addr, prefixlen)),
                                 strict=False)
-            network = self.Network('{0}/{1}'.format(net1.network_address +
+            network = self.Network(u('{0}/{1}'.format(net1.network_address +
                                                     net1.num_addresses,
-                                                    net1.prefixlen))
+                                                    net1.prefixlen)))
         return network
 
     def add_subnet(self, name, prefixlen, vlan=None, align=None, mtu=None):
@@ -461,8 +369,7 @@ class NetworkGenerator(object):
 
     def render(self, template, loader, params=None):
         env = Environment(loader=loader, extensions=['jinja2.ext.do'])
-        add_custom_filters(env)
-        add_custom_globals(env, self.ipversion)
+        TemplateUtils(self.ipversion).setup_environment(env)
         template = env.get_template('{0}.tpl'.format(template))
         return template.render(zones=self.zones,
                                ipv=self.ipversion,
@@ -472,8 +379,7 @@ class NetworkGenerator(object):
         env = Environment(loader=loader,
                           extensions=['jinja2.ext.do'],
                           keep_trailing_newline=True)
-        add_custom_filters(env)
-        add_custom_globals(env, self.ipversion)
+        TemplateUtils(self.ipversion).setup_environment(env)
         template = env.get_template('{0}.tpl'.format(template))
         template.stream(zones=self.zones,
                         ipv=self.ipversion,

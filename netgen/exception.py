@@ -1,4 +1,4 @@
-from __future__ import print_function, unicode_literals
+from __future__ import print_function
 
 
 class NetworkFull(Exception):
@@ -10,8 +10,4 @@ class ConfigError(Exception):
 
 
 class UnalignedSubnet(Exception):
-    pass
-
-
-class ParameterError(Exception):
     pass
