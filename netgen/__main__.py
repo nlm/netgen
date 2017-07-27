@@ -18,12 +18,10 @@ from .engine import IPv4NetworkGenerator, IPv6NetworkGenerator, Topology
 from .exception import NetworkFull, ConfigError, UnalignedSubnet
 
 def flatten(l):
-    return [item for y in l for item in (y if type(y) == list or
-                                         type(y) == tuple else [y])]
+    return [itm for y in l for itm in [y if type(y) in (list, tuple) else [y]]]
 
 def xflatten(l):
-    return (item for y in l for item in (y if type(y) == list or
-                                         type(y) == tuple else [y]))
+    return (itm for y in l for itm in (y if type(y) in (list, tuple) else [y]))
 
 def auto_convert_value(value):
     if value == 'true':
@@ -199,7 +197,7 @@ def main(arguments=None):
                 # continue if topology does not match patterns
                 if args.match_topology:
                     for regexp in args.match_topology:
-                        if regexp.match(subzone['topology']):
+                        if regexp.search(subzone['topology']):
                             break
                     else:
                         continue
@@ -232,7 +230,6 @@ def main(arguments=None):
                     ngen = NetworkGenerator(topology,
                                             with_hosts=not args.without_hosts)
 
-
                     ngen.stream(args.output_template,
                                 output_loader, sys.stdout,
                                 params=params)
@@ -242,7 +239,7 @@ def main(arguments=None):
                 except TemplateNotFound as exception:
                     sys.exit('template not found: {0}'.format(exception))
                 except (TemplateRuntimeError, TemplateSyntaxError) as exception:
-                    st = traceback.format_exc().splitlines()[-3:]
+                    st = traceback.format_exc().splitlines()[-5:]
                     sys.exit('error in template:\n{0}'.format('\n'.join(st)))
                 except NetworkFull as exception:
                     sys.exit('network full: {0}'.format(exception))
