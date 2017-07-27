@@ -9,9 +9,7 @@ vrf: '{{ vrf }}'
 subnets:
 {% for subnet_i in range(subnet_count) %}
   - name: '{{ zone }}-subnet{{ subnet_i }}'
-    # use the ipv46 selector when you use the same template for ipv4 and ipv6
-    # the 'ipv' variable is set to 4 or 6
-    size: {{ ipv46(ipv, 27, 56) }}
+    size: {{ ip46(27, 56) }}
     vlan: {{ base_vlan + subnet_i }}
     hosts:
       {% for host_i in range(host_count) %}
