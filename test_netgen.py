@@ -180,7 +180,7 @@ class UnalignedIPv4Zone(unittest.TestCase):
     def test_subnets(self):
         self.assertEqual(self.zone.subnets, [])
 
-class TemplateUtils(unittest.TestCase):
+class TestTemplateUtils(unittest.TestCase):
 
     def setUp(self):
         self.templateutils = TemplateUtils(4)
