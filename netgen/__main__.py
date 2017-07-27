@@ -207,30 +207,33 @@ def main(arguments=None):
                     else:
                         continue
 
-                try:
-                    params = subzone.get('params', {}).copy()
-                    params.update(args.params)
+                # only output networks of the requested IP version
+                topology_ip_version = auto_convert_network(network).version
+                if ((args.ipv4 is True and topology_ip_version != 4) or
+                    (args.ipv6 is True and topology_ip_version != 6)):
+                        continue
 
+                # Get the Right class for network generation
+                if topology_ip_version == 4:
+                    NetworkGenerator = IPv4NetworkGenerator
+                elif topology_ip_version == 6:
+                    NetworkGenerator = IPv6NetworkGenerator
+                else:
+                    raise AssertionError
+
+                params = subzone.get('params', {}).copy()
+                params.update(args.params)
+
+                try:
                     topology = Topology(zone, subzone['vrf'],
                                         network, subzone['topology'],
                                         loader=topo_loader,
                                         params=params)
 
-                    if ((args.ipv4 is True and topology.ipversion != 4) or
-                        (args.ipv6 is True and topology.ipversion != 6)):
-                            continue
-
                     if args.dump_topology is True:
                         print('# topology: {0}\n'.format(subzone['topology']))
                         print(topology)
                         continue
-
-                    if topology.ipversion == 4:
-                        NetworkGenerator = IPv4NetworkGenerator
-                    elif topology.ipversion == 6:
-                        NetworkGenerator = IPv6NetworkGenerator
-                    else:
-                        raise AssertionError
 
                     ngen = NetworkGenerator(topology,
                                             with_hosts=not args.without_hosts)
