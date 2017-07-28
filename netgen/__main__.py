@@ -257,7 +257,8 @@ def main(arguments=None):
                     sys.exit('unaligned subnet: {0}'.format(exception))
                 except IOError as exception:
                     sys.exit('io error: {0}'.format(exception))
-
+                except KeyboardInterrupt:
+                    sys.exit(1)
 
 if __name__ == '__main__':
     main()
