@@ -20,12 +20,13 @@ setup(
         'Topic :: System :: Networking',
     ],
     install_requires = [
-        'Jinja2>=2.9',
+        'Jinja2==2.10',
         'PyYAML',
         'voluptuous>=0.8.0',
         'ipaddress',
         'six',
         'ansicolors',
+        'simplejson',
     ],
     entry_points = {
         'console_scripts': [

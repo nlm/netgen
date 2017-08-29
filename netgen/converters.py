@@ -1,8 +1,10 @@
 import argparse
 import sys
 import yaml
-import json
-
+try:
+    import simplejson as json
+except ImportError:
+    import json
 try:
     from yaml import CSafeLoader as YAMLLoader, CSafeDumper as YAMLDumper
 except ImportError:
