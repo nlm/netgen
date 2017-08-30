@@ -20,7 +20,7 @@ setup(
         'Topic :: System :: Networking',
     ],
     install_requires = [
-        'Jinja2==2.10',
+        'Jinja2>=2.9',
         'PyYAML',
         'voluptuous>=0.8.0',
         'ipaddress',
