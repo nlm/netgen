@@ -6,7 +6,14 @@ The {{ zone.name }}-{{ zone.vrf }} supernet is {{ zone.network }}
   The {{ subnet.name }} subnet is {{ subnet.network }} in the vlan {{ subnet.vlan|int }} in the vrf {{ zone.vrf }}
   {%- if subnet.hosts %}
   {%- for host in subnet.hosts %}
-    Host {{ host.name }} ip is {{ host.address }}/{{ subnet.network.prefixlen }}
+    {%- if host.status == 'active' %}
+    {%- set flag = '' %}
+    {%- elif host.status == 'reserved' %}
+    {%- set flag = '?' %}
+    {%- elif host.status == 'deprecated' %}
+    {%- set flag = '!' %}
+    {%- endif %}
+    Host {{ flag }}{{ host.name }} ip is {{ host.address }}/{{ subnet.network.prefixlen }}
   {%- endfor %}
   {%- endif %}
   {%- endfor %}

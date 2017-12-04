@@ -16,6 +16,7 @@
       {%- if subnet.vlan %}
       "vlan": {{ "%d"|format(subnet.vlan) }}
       {%- endif %}
+      "status": "{{ "%s"|format(subnet.status) }}"
       {%- if subnet.hosts %}
       "hosts":
         {%- for host in subnet.hosts %}
@@ -23,6 +24,7 @@
           "address": "{{ "%s"|format(host.address) }}"
           "prefixlen": {{ "%d"|format(subnet.network.prefixlen) }}
           "netmask": "{{ "%s"|format(subnet.network.netmask) }}"
+          "status": "{{ "%s"|format(host.status) }}"
         {%- endfor %}
       {%- endif %}
     {%- endfor %}

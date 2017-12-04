@@ -71,7 +71,7 @@ class Host(object):
     """
     Object representing a Host
     """
-    def __init__(self, name, address):
+    def __init__(self, name, address, status='active'):
         """
         Host object initialization
 
@@ -81,6 +81,8 @@ class Host(object):
         """
         self.name = name
         self.address = self.Address(u(str(address)))
+        self.status = status
+        assert status in ('reserved', 'active', 'deprecated')
 
     def __repr__(self):
         return 'Host({0}: {1})'.format(self.name, self.address)
@@ -100,7 +102,8 @@ class Subnet(object):
     """
     Object representing a Subnet
     """
-    def __init__(self, name, network, vlan=None, mtu=None, shadow=False):
+    def __init__(self, name, network, vlan=None, mtu=None, shadow=False,
+                 status='active'):
         """
         Subnet object initialization
 
@@ -110,6 +113,8 @@ class Subnet(object):
             vlan: optional vlan
         """
         self.name = name
+        self.status = status
+        assert status in ('reserved', 'active', 'deprecated')
         self.hosts = []
         self.vlan = vlan
         self.mtu = mtu
@@ -149,6 +154,11 @@ class Subnet(object):
         """
         Adds a host to this subnet
 
+        Uses prefixes to determine the status of the host
+        none = active
+        ? = reserved
+        ! = deprecated
+
         args:
             name: name of the host to be added
         returns:
@@ -169,7 +179,16 @@ class Subnet(object):
             self.cur_addr = self.get_next_ip(int(match.group(1)))
             return None
 
-        host = self.Host(name, addr)
+        if name.startswith('?'):
+            status = 'reserved'
+            name = name[1:]
+        elif name.startswith('!'):
+            status = 'deprecated'
+            name = name[1:]
+        else:
+            status = 'active'
+
+        host = self.Host(name, addr, status=status)
         self.hosts.append(host)
         return host
 
@@ -241,6 +260,11 @@ class Zone(object):
         """
         Adds a subnet to this zone
 
+        Uses prefixes to determine the status of the host
+        none = active
+        ? = reserved
+        ! = deprecated
+
         args:
             name: name of the subnet to be added
             prefixlen: prefix length of the subnet
@@ -258,6 +282,16 @@ class Zone(object):
             network = self.get_next_subnet(align)
             self.cur_addr = network.network_address
 
+        # define status
+        if name.startswith('?'):
+            status = 'reserved'
+            name = name[1:]
+        elif name.startswith('!'):
+            status = 'deprecated'
+            name = name[1:]
+        else:
+            status = 'active'
+
         # if prefixlen is 0, subnet is shadow
         if prefixlen == 0:
             if name == '_':
@@ -265,7 +299,7 @@ class Zone(object):
             elif align is not None:
                 network = self.get_next_subnet(align)
                 subnet = self.Subnet(name, u(str(network)), vlan,
-                                     mtu, shadow=True)
+                                     mtu, shadow=True, status=status)
                 self.subnets.append(subnet)
                 return subnet
             else:
@@ -324,12 +358,12 @@ class NetworkGenerator(object):
                                  lambda x: str(IPv6Network(u(str(x))))),
         Required('vrf'): Match('^[A-Za-z0-9-]+$'),
         Required('subnets'): [{
-            Required('name'): Match('^([A-Za-z0-9-]+|_)$'),
+            Required('name'): Match('^([!?]?[A-Za-z0-9-]+|_)$'),
             Required('size'): int,
             Optional('vlan'): int,
             Optional('align'): int,
             Optional('mtu'): int,
-            Optional('hosts'): [Match('^([A-Za-z0-9-]+|_(/\d+)?)$')],
+            Optional('hosts'): [Match('^([!?]?[A-Za-z0-9-]+|_(/\d+)?)$')],
         }]
     })
 
