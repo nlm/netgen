@@ -71,6 +71,8 @@ class Host(object):
     """
     Object representing a Host
     """
+    valid_statuses = ('reserved', 'active', 'deprecated')
+
     def __init__(self, name, address, status='active'):
         """
         Host object initialization
@@ -81,8 +83,9 @@ class Host(object):
         """
         self.name = name
         self.address = self.Address(u(str(address)))
+        if status not in self.valid_statuses:
+            raise ValueError('{0} is not a valid status'.format(status))
         self.status = status
-        assert status in ('reserved', 'active', 'deprecated')
 
     def __repr__(self):
         return 'Host({0}: {1})'.format(self.name, self.address)
@@ -102,6 +105,8 @@ class Subnet(object):
     """
     Object representing a Subnet
     """
+    valid_statuses = ('reserved', 'active', 'deprecated')
+
     def __init__(self, name, network, vlan=None, mtu=None, shadow=False,
                  status='active'):
         """
@@ -113,8 +118,9 @@ class Subnet(object):
             vlan: optional vlan
         """
         self.name = name
+        if status not in self.valid_statuses:
+            raise ValueError('{0} is not a valid status'.format(status))
         self.status = status
-        assert status in ('reserved', 'active', 'deprecated')
         self.hosts = []
         self.vlan = vlan
         self.mtu = mtu
