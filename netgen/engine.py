@@ -73,7 +73,7 @@ class Host(object):
     """
     valid_statuses = ('reserved', 'active', 'deprecated')
 
-    def __init__(self, name, address, status='active'):
+    def __init__(self, name, address, status='active', hostvars=None):
         """
         Host object initialization
 
@@ -86,6 +86,7 @@ class Host(object):
         if status not in self.valid_statuses:
             raise ValueError('{0} is not a valid status'.format(status))
         self.status = status
+        self.vars = hostvars or dict()
 
     def __repr__(self):
         return 'Host({0}: {1})'.format(self.name, self.address)
@@ -156,7 +157,7 @@ class Subnet(object):
         return tmpnet.network_address + tmpnet.num_addresses + 1
 
 
-    def add_host(self, name):
+    def add_host(self, name, hostvars=None):
         """
         Adds a host to this subnet
 
@@ -194,7 +195,7 @@ class Subnet(object):
         else:
             status = 'active'
 
-        host = self.Host(name, addr, status=status)
+        host = self.Host(name, addr, status=status, hostvars=hostvars)
         self.hosts.append(host)
         return host
 
@@ -400,9 +401,15 @@ class NetworkGenerator(object):
             if not self.with_hosts:
                 continue
 
-            for hostname in elt.get('hosts', []):
+            for host in elt.get('hosts', []):
+                if issubclass(host, dict):
+                    hostname = host['name']
+                    hostvars = host['vars']
+                else:
+                    hostname = host
+                    hostvars = None
                 try:
-                    subnet.add_host(hostname)
+                    subnet.add_host(hostname, hostvars=hostvars)
                 except NetworkFull:
                     raise NetworkFull('network full while adding host "{0}" '
                                       'to subnet "{1}" in network "{2}" '

@@ -25,6 +25,12 @@
           "prefixlen": {{ "%d"|format(subnet.network.prefixlen) }}
           "netmask": "{{ "%s"|format(subnet.network.netmask) }}"
           "status": "{{ "%s"|format(host.status) }}"
+          {%- if host.vars %}
+          "vars":
+          {%- for varname, value in host.vars.items() %}
+            "{{ varname }}": "{{ value }}"
+          {%- endfor %}
+          {%- endif %}
         {%- endfor %}
       {%- endif %}
     {%- endfor %}
