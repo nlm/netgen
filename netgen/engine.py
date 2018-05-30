@@ -370,7 +370,11 @@ class NetworkGenerator(object):
             Optional('vlan'): int,
             Optional('align'): int,
             Optional('mtu'): int,
-            Optional('hosts'): [Match('^([!?]?[A-Za-z0-9-]+|_(/\d+)?)$')],
+            Optional('hosts'): [
+                Or(Match('^([!?]?[A-Za-z0-9-]+|_(/\d+)?)$'),
+                   Match({'name': '^([!?]?[A-Za-z0-9-]+|_(/\d+)?)$',
+                          'vars': {str: Or(int, str, bool)}})
+            )],
         }]
     })
 
