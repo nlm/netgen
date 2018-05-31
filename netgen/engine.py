@@ -371,9 +371,9 @@ class NetworkGenerator(object):
             Optional('align'): int,
             Optional('mtu'): int,
             Optional('hosts'): [
-                Or(Match('^([!?]?[A-Za-z0-9-]+|_(/\d+)?)$'),
+                Any(Match('^([!?]?[A-Za-z0-9-]+|_(/\d+)?)$'),
                    Match({'name': '^([!?]?[A-Za-z0-9-]+|_(/\d+)?)$',
-                          'vars': {str: Or(int, str, bool)}})
+                          'vars': {str: Any(int, str, bool)}})
             )],
         }]
     })
@@ -406,7 +406,7 @@ class NetworkGenerator(object):
                 continue
 
             for host in elt.get('hosts', []):
-                if issubclass(host, dict):
+                if isinstance(host, dict):
                     hostname = host['name']
                     hostvars = host['vars']
                 else:
