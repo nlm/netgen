@@ -372,9 +372,9 @@ class NetworkGenerator(object):
             Optional('mtu'): int,
             Optional('hosts'): [
                 Any(Match('^([!?]?[A-Za-z0-9-]+|_(/\d+)?)$'),
-                   Match({'name': '^([!?]?[A-Za-z0-9-]+|_(/\d+)?)$',
-                          'vars': {str: Any(int, str, bool)}})
-            )],
+                   {'name': Match('^([!?]?[A-Za-z0-9-]+|_(/\d+)?)$'),
+                    'vars': {str: Any(int, str, bool)}})
+            ],
         }]
     })
 
